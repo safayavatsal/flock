@@ -25,9 +25,11 @@ void main() {
     const ColorScheme colorScheme = ColorScheme.light();
     await tester.pumpWidget(
       MaterialApp(
-        theme: ThemeData.from(useMaterial3: true, colorScheme: colorScheme),
+        theme: ThemeData.from(colorScheme: colorScheme),
         home: Scaffold(
-          body: Center(child: OutlinedButton(onPressed: () {}, child: const Text('button'))),
+          body: Center(
+            child: OutlinedButton(onPressed: () {}, child: const Text('button')),
+          ),
         ),
       ),
     );
@@ -67,7 +69,9 @@ void main() {
       MaterialApp(
         theme: ThemeData.from(useMaterial3: false, colorScheme: colorScheme),
         home: Scaffold(
-          body: Center(child: OutlinedButton(onPressed: () {}, child: const Text('button'))),
+          body: Center(
+            child: OutlinedButton(onPressed: () {}, child: const Text('button')),
+          ),
         ),
       ),
     );
@@ -159,13 +163,12 @@ void main() {
           body: Center(
             // If the OutlinedButtonTheme widget is present, it's used
             // instead of the Theme's ThemeData.outlinedButtonTheme.
-            child:
-                themeStyle == null
-                    ? child
-                    : OutlinedButtonTheme(
-                      data: OutlinedButtonThemeData(style: themeStyle),
-                      child: child,
-                    ),
+            child: themeStyle == null
+                ? child
+                : OutlinedButtonTheme(
+                    data: OutlinedButtonThemeData(style: themeStyle),
+                    child: child,
+                  ),
           ),
         ),
       );
@@ -181,10 +184,10 @@ void main() {
       matching: find.byType(InkWell),
     );
 
-    const Set<MaterialState> enabled = <MaterialState>{};
-    const Set<MaterialState> disabled = <MaterialState>{MaterialState.disabled};
-    const Set<MaterialState> hovered = <MaterialState>{MaterialState.hovered};
-    const Set<MaterialState> focused = <MaterialState>{MaterialState.focused};
+    const Set<WidgetState> enabled = <WidgetState>{};
+    const Set<WidgetState> disabled = <WidgetState>{WidgetState.disabled};
+    const Set<WidgetState> hovered = <WidgetState>{WidgetState.hovered};
+    const Set<WidgetState> focused = <WidgetState>{WidgetState.focused};
 
     void checkButton(WidgetTester tester) {
       final Material material = tester.widget<Material>(findMaterial);
@@ -195,11 +198,11 @@ void main() {
       expect(material.shadowColor, shadowColor);
       expect(material.elevation, elevation);
       expect(
-        MaterialStateProperty.resolveAs<MouseCursor?>(inkWell.mouseCursor, enabled),
+        WidgetStateProperty.resolveAs<MouseCursor?>(inkWell.mouseCursor, enabled),
         enabledMouseCursor,
       );
       expect(
-        MaterialStateProperty.resolveAs<MouseCursor?>(inkWell.mouseCursor, disabled),
+        WidgetStateProperty.resolveAs<MouseCursor?>(inkWell.mouseCursor, disabled),
         disabledMouseCursor,
       );
       expect(inkWell.overlayColor!.resolve(hovered), foregroundColor.withOpacity(0.08));
@@ -280,10 +283,7 @@ void main() {
 
     Widget buildFrame({Color? overallShadowColor, Color? themeShadowColor, Color? shadowColor}) {
       return MaterialApp(
-        theme: ThemeData.from(
-          useMaterial3: true,
-          colorScheme: colorScheme.copyWith(shadow: overallShadowColor),
-        ),
+        theme: ThemeData.from(colorScheme: colorScheme.copyWith(shadow: overallShadowColor)),
         home: Scaffold(
           body: Center(
             child: OutlinedButtonTheme(
