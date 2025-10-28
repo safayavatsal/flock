@@ -48,6 +48,7 @@ enum class AccessibilityFeatureFlag : int32_t {
   kReduceMotion = 1 << 4,
   kHighContrast = 1 << 5,
   kOnOffSwitchLabels = 1 << 6,
+  kNoAnnounce = 1 << 7,
 };
 
 //--------------------------------------------------------------------------
@@ -92,9 +93,24 @@ class PlatformConfigurationClient {
   //--------------------------------------------------------------------------
   /// @brief      Receives an updated semantics tree from the Framework.
   ///
+  /// @param[in] viewId The identifier of the view to update.
   /// @param[in] update The updated semantic tree to apply.
   ///
-  virtual void UpdateSemantics(SemanticsUpdate* update) = 0;
+  virtual void UpdateSemantics(int64_t viewId, SemanticsUpdate* update) = 0;
+
+  //--------------------------------------------------------------------------
+  /// @brief      Framework sets the application locale
+  ///
+  /// @param[in] locale The application locale in BCP 47 format.
+  ///
+  virtual void SetApplicationLocale(std::string locale) = 0;
+
+  //--------------------------------------------------------------------------
+  /// @brief      Notifies whether Framework starts generating semantics tree.
+  ///
+  /// @param[in] enabled True if Framework starts generating semantics tree.
+  ///
+  virtual void SetSemanticsTreeEnabled(bool enabled) = 0;
 
   //--------------------------------------------------------------------------
   /// @brief      When the Flutter application has a message to send to the
@@ -451,12 +467,14 @@ class PlatformConfiguration final {
   ///             originates on the platform view and has been forwarded to the
   ///             platform configuration here by the engine.
   ///
+  /// @param[in]  view_id The identifier of the view.
   /// @param[in]  node_id The identifier of the accessibility node.
   /// @param[in]  action  The accessibility related action performed on the
   ///                     node of the specified ID.
   /// @param[in]  args    Optional data that applies to the specified action.
   ///
-  void DispatchSemanticsAction(int32_t node_id,
+  void DispatchSemanticsAction(int64_t view_id,
+                               int32_t node_id,
                                SemanticsAction action,
                                fml::MallocMapping args);
 
@@ -620,7 +638,11 @@ class PlatformConfigurationNativeApi {
                      double width,
                      double height);
 
-  static void UpdateSemantics(SemanticsUpdate* update);
+  static void UpdateSemantics(int64_t viewId, SemanticsUpdate* update);
+
+  static void SetApplicationLocale(std::string locale);
+
+  static void SetSemanticsTreeEnabled(bool enabled);
 
   static void SetNeedsReportTimings(bool value);
 

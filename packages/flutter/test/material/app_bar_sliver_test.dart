@@ -33,8 +33,11 @@ Widget buildSliverAppBarApp({
               toolbarHeight: toolbarHeight,
               snap: snap,
               bottom: TabBar(
-                tabs:
-                    <String>['A', 'B', 'C'].map<Widget>((String t) => Tab(text: 'TAB $t')).toList(),
+                tabs: <String>[
+                  'A',
+                  'B',
+                  'C',
+                ].map<Widget>((String t) => Tab(text: 'TAB $t')).toList(),
               ),
             ),
             SliverToBoxAdapter(child: Container(height: 1200.0, color: Colors.orange[400])),
@@ -109,6 +112,70 @@ void main() {
     expect(titleOffset.dx, backButtonOffset.dx + titleSpacing);
   });
 
+  testWidgets(
+    'SliverAppBar does not draw menu for end drawer if automaticallyImplyActions is false and actions is null',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            endDrawer: const Drawer(),
+            body: CustomScrollView(
+              primary: true,
+              slivers: <Widget>[
+                const SliverAppBar(automaticallyImplyActions: false),
+                SliverToBoxAdapter(child: Container(height: 1200, color: Colors.orange[400])),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(find.byIcon(Icons.menu), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'SliverAppBar draws menu for end drawer if automaticallyImplyActions is true (default) and actions is null',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            endDrawer: const Drawer(),
+            body: CustomScrollView(
+              primary: true,
+              slivers: <Widget>[
+                const SliverAppBar(),
+                SliverToBoxAdapter(child: Container(height: 1200, color: Colors.orange[400])),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(find.byIcon(Icons.menu), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'SliverAppBar does not draw menu for end drawer if automaticallyImplyActions is true (default) but actions are explicitly provided',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            endDrawer: const Drawer(),
+            body: CustomScrollView(
+              primary: true,
+              slivers: <Widget>[
+                const SliverAppBar(actions: <Widget>[Icon(Icons.settings)]),
+                SliverToBoxAdapter(child: Container(height: 1200, color: Colors.orange[400])),
+              ],
+            ),
+          ),
+        ),
+      );
+      expect(find.byIcon(Icons.menu), findsNothing);
+      expect(find.byIcon(Icons.settings), findsOneWidget);
+    },
+  );
+
   testWidgets('SliverAppBar.medium with bottom widget', (WidgetTester tester) async {
     // This is a regression test for https://github.com/flutter/flutter/issues/115091
     const double collapsedAppBarHeight = 64;
@@ -128,7 +195,11 @@ void main() {
                   leading: IconButton(onPressed: () {}, icon: const Icon(Icons.menu)),
                   title: const Text(title),
                   bottom: const TabBar(
-                    tabs: <Widget>[Tab(text: 'Tab 1'), Tab(text: 'Tab 2'), Tab(text: 'Tab 3')],
+                    tabs: <Widget>[
+                      Tab(text: 'Tab 1'),
+                      Tab(text: 'Tab 2'),
+                      Tab(text: 'Tab 3'),
+                    ],
                   ),
                 ),
                 SliverToBoxAdapter(child: Container(height: 1200, color: Colors.orange[400])),
@@ -176,7 +247,11 @@ void main() {
                   leading: IconButton(onPressed: () {}, icon: const Icon(Icons.menu)),
                   title: const Text(title),
                   bottom: const TabBar(
-                    tabs: <Widget>[Tab(text: 'Tab 1'), Tab(text: 'Tab 2'), Tab(text: 'Tab 3')],
+                    tabs: <Widget>[
+                      Tab(text: 'Tab 1'),
+                      Tab(text: 'Tab 2'),
+                      Tab(text: 'Tab 3'),
+                    ],
                   ),
                 ),
                 SliverToBoxAdapter(child: Container(height: 1200, color: Colors.orange[400])),
@@ -211,7 +286,6 @@ void main() {
     const String title = 'Medium AppBar';
     Widget buildAppBar({double textScaleFactor = 1.0}) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: MediaQuery.withClampedTextScaling(
           minScaleFactor: textScaleFactor,
           maxScaleFactor: textScaleFactor,
@@ -248,7 +322,6 @@ void main() {
     const String title = 'Large AppBar';
     Widget buildAppBar({double textScaleFactor = 1.0}) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: MediaQuery.withClampedTextScaling(
           minScaleFactor: textScaleFactor,
           maxScaleFactor: textScaleFactor,
@@ -282,7 +355,6 @@ void main() {
     const String title = 'Medium AppBar';
     Widget buildAppBar({double textScaleFactor = 1.0}) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: MediaQuery.withClampedTextScaling(
           minScaleFactor: textScaleFactor,
           maxScaleFactor: textScaleFactor,
@@ -319,7 +391,6 @@ void main() {
     const String title = 'Large AppBar';
     Widget buildAppBar({double textScaleFactor = 1.0}) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: MediaQuery.withClampedTextScaling(
           minScaleFactor: textScaleFactor,
           maxScaleFactor: textScaleFactor,
@@ -656,8 +727,9 @@ void main() {
             slivers: <Widget>[
               SliverAppBar.medium(
                 automaticallyImplyLeading: false,
-                leading:
-                    showLeading ? IconButton(icon: const Icon(Icons.menu), onPressed: () {}) : null,
+                leading: showLeading
+                    ? IconButton(icon: const Icon(Icons.menu), onPressed: () {})
+                    : null,
                 title: const Text(title),
               ),
               SliverToBoxAdapter(child: Container(height: 1200, color: Colors.orange[400])),
@@ -709,8 +781,9 @@ void main() {
             slivers: <Widget>[
               SliverAppBar.large(
                 automaticallyImplyLeading: false,
-                leading:
-                    showLeading ? IconButton(icon: const Icon(Icons.menu), onPressed: () {}) : null,
+                leading: showLeading
+                    ? IconButton(icon: const Icon(Icons.menu), onPressed: () {})
+                    : null,
                 title: const Text(title),
               ),
               SliverToBoxAdapter(child: Container(height: 1200, color: Colors.orange[400])),
@@ -747,7 +820,7 @@ void main() {
     expect(titleOffset.dx, titleSpacing);
   });
 
-  group('MaterialStateColor scrolledUnder', () {
+  group('WidgetStateColor scrolledUnder', () {
     const double collapsedHeight = kToolbarHeight;
     const double expandedHeight = 200.0;
     const Color scrolledColor = Color(0xff00ff00);
@@ -765,22 +838,17 @@ void main() {
             slivers: <Widget>[
               SliverAppBar(
                 elevation: 0,
-                backgroundColor: MaterialStateColor.resolveWith((Set<MaterialState> states) {
-                  return states.contains(MaterialState.scrolledUnder)
-                      ? scrolledColor
-                      : defaultColor;
+                backgroundColor: WidgetStateColor.resolveWith((Set<WidgetState> states) {
+                  return states.contains(WidgetState.scrolledUnder) ? scrolledColor : defaultColor;
                 }),
                 expandedHeight: expandedHeight,
                 pinned: true,
-                flexibleSpace:
-                    includeFlexibleSpace
-                        ? const FlexibleSpaceBar(title: Text('SliverAppBar'))
-                        : null,
+                flexibleSpace: includeFlexibleSpace
+                    ? const FlexibleSpaceBar(title: Text('SliverAppBar'))
+                    : null,
               ),
-              SliverList(
-                delegate: SliverChildListDelegate(<Widget>[
-                  Container(height: contentHeight, color: Colors.teal),
-                ]),
+              SliverList.list(
+                children: <Widget>[Container(height: contentHeight, color: Colors.teal)],
               ),
             ],
           ),
@@ -1217,7 +1285,7 @@ void main() {
   });
 
   testWidgets('Material3 - SliverAppBar.medium defaults', (WidgetTester tester) async {
-    final ThemeData theme = ThemeData(useMaterial3: true);
+    final ThemeData theme = ThemeData();
     const double collapsedAppBarHeight = 64;
     const double expandedAppBarHeight = 112;
 
@@ -1243,8 +1311,9 @@ void main() {
     // faded in. The last is the title on the mainrow with the icons. It is
     // transparent when the app bar is expanded, and opaque when it is collapsed.
     final Finder expandedTitle = find.text('AppBar Title').first;
-    final Finder expandedTitleClip =
-        find.ancestor(of: expandedTitle, matching: find.byType(ClipRect)).first;
+    final Finder expandedTitleClip = find
+        .ancestor(of: expandedTitle, matching: find.byType(ClipRect))
+        .first;
     final Finder collapsedTitle = find.text('AppBar Title').last;
     final Finder collapsedTitleOpacity = find.ancestor(
       of: collapsedTitle,
@@ -1300,7 +1369,7 @@ void main() {
   });
 
   testWidgets('Material3 - SliverAppBar.large defaults', (WidgetTester tester) async {
-    final ThemeData theme = ThemeData(useMaterial3: true);
+    final ThemeData theme = ThemeData();
     const double collapsedAppBarHeight = 64;
     const double expandedAppBarHeight = 152;
 
@@ -1326,8 +1395,9 @@ void main() {
     // faded in. The last is the title on the mainrow with the icons. It is
     // transparent when the app bar is expanded, and opaque when it is collapsed.
     final Finder expandedTitle = find.text('AppBar Title').first;
-    final Finder expandedTitleClip =
-        find.ancestor(of: expandedTitle, matching: find.byType(ClipRect)).first;
+    final Finder expandedTitleClip = find
+        .ancestor(of: expandedTitle, matching: find.byType(ClipRect))
+        .first;
     final Finder collapsedTitle = find.text('AppBar Title').last;
     final Finder collapsedTitleOpacity = find.ancestor(
       of: collapsedTitle,
@@ -1480,19 +1550,19 @@ void main() {
                   forceMaterialTransparency: forceMaterialTransparency,
                   title: const Text('AppBar'),
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+                SliverList.builder(
+                  itemCount: 20,
+                  itemBuilder: (BuildContext context, int index) {
                     return SizedBox(
                       height: appBarHeight,
-                      child:
-                          index == 0
-                              ? Align(
-                                alignment: Alignment.topCenter,
-                                child: TextButton(onPressed: onPressed, child: const Text('press')),
-                              )
-                              : const SizedBox(),
+                      child: index == 0
+                          ? Align(
+                              alignment: Alignment.topCenter,
+                              child: TextButton(onPressed: onPressed, child: const Text('press')),
+                            )
+                          : const SizedBox(),
                     );
-                  }, childCount: 20),
+                  },
                 ),
               ],
             ),
@@ -1965,10 +2035,8 @@ void main() {
                       background: Container(height: appBarHeight, color: Colors.orange),
                     ),
                   ),
-                  SliverList(
-                    delegate: SliverChildListDelegate(<Widget>[
-                      Container(height: 1200.0, color: Colors.teal),
-                    ]),
+                  SliverList.list(
+                    children: <Widget>[Container(height: 1200.0, color: Colors.teal)],
                   ),
                 ],
               ),
@@ -2064,8 +2132,9 @@ void main() {
         ),
       );
 
-      final SliverPersistentHeaderDelegate delegate =
-          tester.widget<SliverPersistentHeader>(find.byType(SliverPersistentHeader)).delegate;
+      final SliverPersistentHeaderDelegate delegate = tester
+          .widget<SliverPersistentHeader>(find.byType(SliverPersistentHeader))
+          .delegate;
 
       // Ensure we have a non-null vsync when it's needed.
       if (!floating ||
@@ -2141,7 +2210,11 @@ void main() {
       const MaterialApp(
         home: CustomScrollView(
           slivers: <Widget>[
-            SliverAppBar(leading: Placeholder(key: key), leadingWidth: 100, title: Text('Title')),
+            SliverAppBar(
+              leading: Placeholder(key: key),
+              leadingWidth: 100,
+              title: Text('Title'),
+            ),
           ],
         ),
       ),

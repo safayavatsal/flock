@@ -6,6 +6,8 @@
 /// @docImport 'text_button.dart';
 library;
 
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -24,11 +26,9 @@ import 'list_tile.dart';
 import 'list_tile_theme.dart';
 import 'material.dart';
 import 'material_localizations.dart';
-import 'material_state.dart';
 import 'popup_menu_theme.dart';
 import 'text_theme.dart';
 import 'theme.dart';
-import 'theme_data.dart';
 import 'tooltip.dart';
 
 // Examples can assume:
@@ -110,13 +110,53 @@ class PopupMenuDivider extends PopupMenuEntry<Never> {
   /// Creates a horizontal divider for a popup menu.
   ///
   /// By default, the divider has a height of 16 logical pixels.
-  const PopupMenuDivider({super.key, this.height = _kMenuDividerHeight});
+  const PopupMenuDivider({
+    super.key,
+    this.height = _kMenuDividerHeight,
+    this.thickness,
+    this.indent,
+    this.endIndent,
+    this.radius,
+    this.color,
+  });
 
   /// The height of the divider entry.
   ///
   /// Defaults to 16 pixels.
   @override
   final double height;
+
+  /// The thickness of the line drawn within the [PopupMenuDivider].
+  ///
+  /// {@macro flutter.material.Divider.thickness}
+  final double? thickness;
+
+  /// The amount of empty space to the leading edge of the [PopupMenuDivider].
+  ///
+  /// {@macro flutter.material.Divider.indent}
+  final double? indent;
+
+  /// The amount of empty space to the trailing edge of the [PopupMenuDivider].
+  ///
+  /// {@macro flutter.material.Divider.endIndent}
+  final double? endIndent;
+
+  /// The amount of radius for the border of the [PopupMenuDivider].
+  ///
+  /// {@macro flutter.material.Divider.radius}
+  final BorderRadiusGeometry? radius;
+
+  /// {@macro flutter.material.Divider.color}
+  ///
+  /// {@tool snippet}
+  ///
+  /// ```dart
+  /// const PopupMenuDivider(
+  ///   color: Colors.deepOrange,
+  /// )
+  /// ```
+  /// {@end-tool}
+  final Color? color;
 
   @override
   bool represents(void value) => false;
@@ -127,7 +167,16 @@ class PopupMenuDivider extends PopupMenuEntry<Never> {
 
 class _PopupMenuDividerState extends State<PopupMenuDivider> {
   @override
-  Widget build(BuildContext context) => Divider(height: widget.height);
+  Widget build(BuildContext context) {
+    return Divider(
+      height: widget.height,
+      thickness: widget.thickness,
+      indent: widget.indent,
+      color: widget.color,
+      endIndent: widget.endIndent,
+      radius: widget.radius,
+    );
+  }
 }
 
 // This widget only exists to enable _PopupMenuRoute to save the sizes of
@@ -281,7 +330,7 @@ class PopupMenuItem<T> extends PopupMenuEntry<T> {
   /// If [PopupMenuThemeData.labelTextStyle] is also null, then [TextTheme.labelLarge]
   /// is used with the [ColorScheme.onSurface] color when popup menu item is enabled and
   /// the [ColorScheme.onSurface] color with 0.38 opacity when the popup menu item is disabled.
-  final MaterialStateProperty<TextStyle?>? labelTextStyle;
+  final WidgetStateProperty<TextStyle?>? labelTextStyle;
 
   /// {@template flutter.material.popupmenu.mouseCursor}
   /// The cursor for a mouse pointer when it enters or is hovering over the
@@ -296,7 +345,7 @@ class PopupMenuItem<T> extends PopupMenuEntry<T> {
   /// {@endtemplate}
   ///
   /// If null, then the value of [PopupMenuThemeData.mouseCursor] is used. If
-  /// that is also null, then [WidgetStateMouseCursor.clickable] is used.
+  /// that is also null, then [WidgetStateMouseCursor.adaptiveClickable] is used.
   final MouseCursor? mouseCursor;
 
   /// The widget below this widget in the tree.
@@ -359,16 +408,16 @@ class PopupMenuItemState<T, W extends PopupMenuItem<T>> extends State<W> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
-    final PopupMenuThemeData defaults =
-        theme.useMaterial3 ? _PopupMenuDefaultsM3(context) : _PopupMenuDefaultsM2(context);
-    final Set<MaterialState> states = <MaterialState>{if (!widget.enabled) MaterialState.disabled};
+    final PopupMenuThemeData defaults = theme.useMaterial3
+        ? _PopupMenuDefaultsM3(context)
+        : _PopupMenuDefaultsM2(context);
+    final Set<WidgetState> states = <WidgetState>{if (!widget.enabled) WidgetState.disabled};
 
-    TextStyle style =
-        theme.useMaterial3
-            ? (widget.labelTextStyle?.resolve(states) ??
-                popupMenuTheme.labelTextStyle?.resolve(states)! ??
-                defaults.labelTextStyle!.resolve(states)!)
-            : (widget.textStyle ?? popupMenuTheme.textStyle ?? defaults.textStyle!);
+    TextStyle style = theme.useMaterial3
+        ? (widget.labelTextStyle?.resolve(states) ??
+              popupMenuTheme.labelTextStyle?.resolve(states)! ??
+              defaults.labelTextStyle!.resolve(states)!)
+        : (widget.textStyle ?? popupMenuTheme.textStyle ?? defaults.textStyle!);
 
     if (!widget.enabled && !theme.useMaterial3) {
       style = style.copyWith(color: theme.disabledColor);
@@ -385,7 +434,6 @@ class PopupMenuItemState<T, W extends PopupMenuItem<T>> extends State<W> {
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: widget.height),
         child: Padding(
-          key: const Key('menu item padding'),
           padding: padding,
           child: Align(alignment: AlignmentDirectional.centerStart, child: buildChild()),
         ),
@@ -394,13 +442,14 @@ class PopupMenuItemState<T, W extends PopupMenuItem<T>> extends State<W> {
 
     if (!widget.enabled) {
       final bool isDark = theme.brightness == Brightness.dark;
-      item = IconTheme.merge(data: IconThemeData(opacity: isDark ? 0.5 : 0.38), child: item);
+      item = IconTheme.merge(
+        data: IconThemeData(opacity: isDark ? 0.5 : 0.38),
+        child: item,
+      );
     }
 
     return MergeSemantics(
-      child: Semantics(
-        enabled: widget.enabled,
-        button: true,
+      child: buildSemantics(
         child: InkWell(
           onTap: widget.enabled ? handleTap : null,
           canRequestFocus: widget.enabled,
@@ -412,6 +461,25 @@ class PopupMenuItemState<T, W extends PopupMenuItem<T>> extends State<W> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Builds the semantic wrapper for the popup menu item.
+  ///
+  /// This method creates the [Semantics] widget that provides accessibility
+  /// information for the menu item. By default, it sets the semantic role to
+  /// [SemanticsRole.menuItem] and includes the enabled state and button flag.
+  ///
+  /// Subclasses can override this method to customize the semantic properties.
+  /// For example, [CheckedPopupMenuItem] overrides this to use
+  /// [SemanticsRole.menuItemCheckbox] and include checked state information.
+  @protected
+  Widget buildSemantics({required Widget child}) {
+    return Semantics(
+      role: SemanticsRole.menuItem,
+      enabled: widget.enabled,
+      button: true,
+      child: child,
     );
   }
 }
@@ -528,14 +596,13 @@ class _CheckedPopupMenuItemState<T> extends PopupMenuItemState<T, CheckedPopupMe
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(duration: _fadeDuration, vsync: this)
-          ..value = widget.checked ? 1.0 : 0.0
-          ..addListener(
-            () => setState(() {
-              /* animation changed */
-            }),
-          );
+    _controller = AnimationController(duration: _fadeDuration, vsync: this)
+      ..value = widget.checked ? 1.0 : 0.0
+      ..addListener(
+        () => setState(() {
+          /* animation changed */
+        }),
+      );
   }
 
   @override
@@ -556,13 +623,25 @@ class _CheckedPopupMenuItemState<T> extends PopupMenuItemState<T, CheckedPopupMe
   }
 
   @override
+  Widget buildSemantics({required Widget child}) {
+    return Semantics(
+      role: SemanticsRole.menuItemCheckbox,
+      enabled: widget.enabled,
+      checked: widget.checked,
+      button: true,
+      child: child,
+    );
+  }
+
+  @override
   Widget buildChild() {
     final ThemeData theme = Theme.of(context);
     final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
-    final PopupMenuThemeData defaults =
-        theme.useMaterial3 ? _PopupMenuDefaultsM3(context) : _PopupMenuDefaultsM2(context);
-    final Set<MaterialState> states = <MaterialState>{if (widget.checked) MaterialState.selected};
-    final MaterialStateProperty<TextStyle?>? effectiveLabelTextStyle =
+    final PopupMenuThemeData defaults = theme.useMaterial3
+        ? _PopupMenuDefaultsM3(context)
+        : _PopupMenuDefaultsM2(context);
+    final Set<WidgetState> states = <WidgetState>{if (widget.checked) WidgetState.selected};
+    final WidgetStateProperty<TextStyle?>? effectiveLabelTextStyle =
         widget.labelTextStyle ?? popupMenuTheme.labelTextStyle ?? defaults.labelTextStyle;
     return IgnorePointer(
       child: ListTileTheme.merge(
@@ -655,8 +734,9 @@ class _PopupMenuState<T> extends State<_PopupMenu<T>> {
     final List<Widget> children = <Widget>[];
     final ThemeData theme = Theme.of(context);
     final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
-    final PopupMenuThemeData defaults =
-        theme.useMaterial3 ? _PopupMenuDefaultsM3(context) : _PopupMenuDefaultsM2(context);
+    final PopupMenuThemeData defaults = theme.useMaterial3
+        ? _PopupMenuDefaultsM3(context)
+        : _PopupMenuDefaultsM2(context);
 
     for (int i = 0; i < widget.route.items.length; i += 1) {
       final CurvedAnimation opacity = _opacities[i];
@@ -686,6 +766,7 @@ class _PopupMenuState<T> extends State<_PopupMenu<T>> {
       child: IntrinsicWidth(
         stepWidth: _kMenuWidthStep,
         child: Semantics(
+          role: SemanticsRole.menu,
           scopesRoute: true,
           namesRoute: true,
           explicitChildNodes: true,
@@ -1515,15 +1596,69 @@ class PopupMenuButton<T> extends StatefulWidget {
 /// See [showButtonMenu] for a way to programmatically open the popup menu
 /// of your button state.
 class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
+  bool _isMenuExpanded = false;
+  RelativeRect? _lastPosition;
+  late PopupMenuThemeData _popupMenuTheme;
+  RenderBox? _cachedButtonRenderBox;
+  RenderBox? _cachedOverlayRenderBox;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _updateCachedObjects();
+  }
+
+  /// Caches some objects relying on context used in _positionBuilder()
+  /// to avoid crashing when the popup menu is inactive.
+  /// See https://github.com/flutter/flutter/issues/171422 for more details.
+  void _updateCachedObjects() {
+    if (mounted) {
+      _popupMenuTheme = PopupMenuTheme.of(context);
+
+      final RenderObject? buttonRenderObject = context.findRenderObject();
+      if (buttonRenderObject is RenderBox) {
+        _cachedButtonRenderBox = buttonRenderObject;
+      }
+      try {
+        final NavigatorState navigator = Navigator.of(
+          context,
+          rootNavigator: widget.useRootNavigator,
+        );
+        final RenderObject? overlayRenderObject = navigator.overlay?.context.findRenderObject();
+        if (overlayRenderObject is RenderBox) {
+          _cachedOverlayRenderBox = overlayRenderObject;
+        }
+      } catch (e) {
+        _cachedButtonRenderBox = null;
+        _cachedOverlayRenderBox = null;
+      }
+    }
+  }
+
+  RelativeRect _getDefaultPosition(BoxConstraints constraints) {
+    return _lastPosition ?? RelativeRect.fromSize(Rect.zero, constraints.biggest);
+  }
+
   RelativeRect _positionBuilder(BuildContext _, BoxConstraints constraints) {
-    final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
-    final RenderBox button = context.findRenderObject()! as RenderBox;
-    final RenderBox overlay =
-        Navigator.of(
-              context,
-              rootNavigator: widget.useRootNavigator,
-            ).overlay!.context.findRenderObject()!
-            as RenderBox;
+    if (!mounted) {
+      // When the route is displayed, the `_positionBuilder` closure is stored.
+      // Even after the button has been unmounted and the context becomes invalid,
+      // the route might keep displaying, and `_positionBuilder` must continue to
+      // work in that case.
+      return _getDefaultPosition(constraints);
+    }
+
+    final PopupMenuThemeData popupMenuTheme = _popupMenuTheme;
+
+    // Use cached render objects if available.
+    final RenderBox? button = _cachedButtonRenderBox;
+    final RenderBox? overlay = _cachedOverlayRenderBox;
+
+    // Check if cached render objects are available and still attached.
+    if (button == null || overlay == null || !button.attached || !overlay.attached) {
+      // Render objects are not available or detached, return cached position or default.
+      return _getDefaultPosition(constraints);
+    }
     final PopupMenuPosition popupMenuPosition =
         widget.position ?? popupMenuTheme.position ?? PopupMenuPosition.over;
     late Offset offset;
@@ -1545,7 +1680,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
       Offset.zero & overlay.size,
     );
 
-    return position;
+    return _lastPosition = position;
   }
 
   /// A method to show a popup menu with the items supplied to
@@ -1557,22 +1692,24 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
   /// You would access your [PopupMenuButtonState] using a [GlobalKey] and
   /// show the menu of the button with `globalKey.currentState.showButtonMenu`.
   void showButtonMenu() {
-    final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
+    // Ensure cached render objects are initialized
+    _updateCachedObjects();
     final List<PopupMenuEntry<T>> items = widget.itemBuilder(context);
     // Only show the menu if there is something to show
     if (items.isNotEmpty) {
       widget.onOpened?.call();
+      _isMenuExpanded = true;
       showMenu<T?>(
         context: context,
-        elevation: widget.elevation ?? popupMenuTheme.elevation,
-        shadowColor: widget.shadowColor ?? popupMenuTheme.shadowColor,
-        surfaceTintColor: widget.surfaceTintColor ?? popupMenuTheme.surfaceTintColor,
+        elevation: widget.elevation,
+        shadowColor: widget.shadowColor,
+        surfaceTintColor: widget.surfaceTintColor,
         items: items,
         initialValue: widget.initialValue,
         positionBuilder: _positionBuilder,
-        shape: widget.shape ?? popupMenuTheme.shape,
-        menuPadding: widget.menuPadding ?? popupMenuTheme.menuPadding,
-        color: widget.color ?? popupMenuTheme.color,
+        shape: widget.shape,
+        menuPadding: widget.menuPadding,
+        color: widget.color,
         constraints: widget.constraints,
         clipBehavior: widget.clipBehavior,
         useRootNavigator: widget.useRootNavigator,
@@ -1588,6 +1725,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
           return null;
         }
         widget.onSelected?.call(newValue);
+        _isMenuExpanded = false;
       });
     }
   }
@@ -1634,42 +1772,44 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
           child: child,
         );
       }
-      return child;
+      return Semantics(expanded: _isMenuExpanded, child: child);
     }
 
-    return IconButton(
-      key: StandardComponentType.moreButton.key,
-      icon: widget.icon ?? Icon(Icons.adaptive.more),
-      padding: widget.padding,
-      splashRadius: widget.splashRadius,
-      iconSize: widget.iconSize ?? popupMenuTheme.iconSize ?? iconTheme.size,
-      color: widget.iconColor ?? popupMenuTheme.iconColor ?? iconTheme.color,
-      tooltip: widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
-      onPressed: widget.enabled ? showButtonMenu : null,
-      enableFeedback: enableFeedback,
-      style: widget.style,
+    return Semantics(
+      child: IconButton(
+        key: StandardComponentType.moreButton.key,
+        icon: Semantics(expanded: _isMenuExpanded, child: widget.icon ?? Icon(Icons.adaptive.more)),
+        padding: widget.padding,
+        splashRadius: widget.splashRadius,
+        iconSize: widget.iconSize ?? popupMenuTheme.iconSize ?? iconTheme.size,
+        color: widget.iconColor ?? popupMenuTheme.iconColor ?? iconTheme.color,
+        tooltip: widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
+        onPressed: widget.enabled ? showButtonMenu : null,
+        enableFeedback: enableFeedback,
+        style: widget.style,
+      ),
     );
   }
 }
 
-// This MaterialStateProperty is passed along to the menu item's InkWell which
-// resolves the property against MaterialState.disabled, MaterialState.hovered,
-// MaterialState.focused.
-class _EffectiveMouseCursor extends MaterialStateMouseCursor {
+// This WidgetStateProperty is passed along to the menu item's InkWell which
+// resolves the property against WidgetState.disabled, WidgetState.hovered,
+// WidgetState.focused.
+class _EffectiveMouseCursor extends WidgetStateMouseCursor {
   const _EffectiveMouseCursor(this.widgetCursor, this.themeCursor);
 
   final MouseCursor? widgetCursor;
-  final MaterialStateProperty<MouseCursor?>? themeCursor;
+  final WidgetStateProperty<MouseCursor?>? themeCursor;
 
   @override
-  MouseCursor resolve(Set<MaterialState> states) {
-    return MaterialStateProperty.resolveAs<MouseCursor?>(widgetCursor, states) ??
+  MouseCursor resolve(Set<WidgetState> states) {
+    return WidgetStateProperty.resolveAs<MouseCursor?>(widgetCursor, states) ??
         themeCursor?.resolve(states) ??
-        MaterialStateMouseCursor.clickable.resolve(states);
+        WidgetStateMouseCursor.adaptiveClickable.resolve(states);
   }
 
   @override
-  String get debugDescription => 'MaterialStateMouseCursor(PopupMenuItemState)';
+  String get debugDescription => 'WidgetStateMouseCursor(PopupMenuItemState)';
 }
 
 class _PopupMenuDefaultsM2 extends PopupMenuThemeData {
@@ -1705,11 +1845,11 @@ class _PopupMenuDefaultsM3 extends PopupMenuThemeData {
   late final ColorScheme _colors = _theme.colorScheme;
   late final TextTheme _textTheme = _theme.textTheme;
 
-  @override MaterialStateProperty<TextStyle?>? get labelTextStyle {
-    return MaterialStateProperty.resolveWith((Set<MaterialState> states) {
+  @override WidgetStateProperty<TextStyle?>? get labelTextStyle {
+    return WidgetStateProperty.resolveWith((Set<WidgetState> states) {
     // TODO(quncheng): Update this hard-coded value to use the latest tokens.
     final TextStyle style = _textTheme.labelLarge!;
-      if (states.contains(MaterialState.disabled)) {
+      if (states.contains(WidgetState.disabled)) {
         return style.apply(color: _colors.onSurface.withOpacity(0.38));
       }
       return style.apply(color: _colors.onSurface);
