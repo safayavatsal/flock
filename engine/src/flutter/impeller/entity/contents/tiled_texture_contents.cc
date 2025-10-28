@@ -5,6 +5,7 @@
 #include "impeller/entity/contents/tiled_texture_contents.h"
 
 #include "fml/logging.h"
+#include "impeller/core/formats.h"
 #include "impeller/entity/contents/content_context.h"
 #include "impeller/entity/tiled_texture_fill.frag.h"
 #include "impeller/entity/tiled_texture_fill_external.frag.h"
@@ -139,7 +140,7 @@ bool TiledTextureContents::Render(const ContentContext& renderer,
         },
         frame_info,
         [this, &renderer](RenderPass& pass) {
-          auto& host_buffer = renderer.GetTransientsBuffer();
+          auto& data_host_buffer = renderer.GetTransientsDataBuffer();
 #ifdef IMPELLER_DEBUG
           pass.SetCommandLabel("TextureFill External");
 #endif  // IMPELLER_DEBUG
@@ -151,7 +152,8 @@ bool TiledTextureContents::Render(const ContentContext& renderer,
           frag_info.y_tile_mode =
               static_cast<Scalar>(sampler_descriptor_.height_address_mode);
           frag_info.alpha = GetOpacityFactor();
-          FSExternal::BindFragInfo(pass, host_buffer.EmplaceUniform(frag_info));
+          FSExternal::BindFragInfo(pass,
+                                   data_host_buffer.EmplaceUniform(frag_info));
 
           SamplerDescriptor sampler_desc;
           // OES_EGL_image_external states that only CLAMP_TO_EDGE is valid,
@@ -159,6 +161,10 @@ bool TiledTextureContents::Render(const ContentContext& renderer,
           // coordinates.
           sampler_desc.width_address_mode = SamplerAddressMode::kClampToEdge;
           sampler_desc.height_address_mode = SamplerAddressMode::kClampToEdge;
+          sampler_desc.min_filter = sampler_descriptor_.min_filter;
+          sampler_desc.mag_filter = sampler_descriptor_.mag_filter;
+          sampler_desc.mip_filter = MipFilter::kBase;
+
           FSExternal::BindSAMPLEREXTERNALOESTextureSampler(
               pass, texture_,
               renderer.GetContext()->GetSamplerLibrary()->GetSampler(
@@ -175,7 +181,7 @@ bool TiledTextureContents::Render(const ContentContext& renderer,
   return ColorSourceContents::DrawGeometry<VS>(
       renderer, entity, pass, pipeline_callback, frame_info,
       [this, &renderer, &entity](RenderPass& pass) {
-        auto& host_buffer = renderer.GetTransientsBuffer();
+        auto& data_host_buffer = renderer.GetTransientsDataBuffer();
 #ifdef IMPELLER_DEBUG
         pass.SetCommandLabel("TextureFill");
 #endif  // IMPELLER_DEBUG
@@ -186,7 +192,7 @@ bool TiledTextureContents::Render(const ContentContext& renderer,
         frag_info.alpha =
             GetOpacityFactor() *
             GetGeometry()->ComputeAlphaCoverage(entity.GetTransform());
-        FS::BindFragInfo(pass, host_buffer.EmplaceUniform(frag_info));
+        FS::BindFragInfo(pass, data_host_buffer.EmplaceUniform(frag_info));
 
         if (color_filter_) {
           auto filtered_texture = CreateFilterTexture(renderer);
