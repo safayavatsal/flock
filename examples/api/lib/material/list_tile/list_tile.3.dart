@@ -13,7 +13,7 @@ class ListTileApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(theme: ThemeData(useMaterial3: true), home: const ListTileExample());
+    return const MaterialApp(home: ListTileExample());
   }
 }
 
@@ -62,10 +62,10 @@ class _ListTileExampleState extends State<ListTileExample> {
           title: const Text('Headline'),
           subtitle: Text('Enabled: $_enabled, Selected: $_selected'),
           trailing: Switch(
-            onChanged: (bool? value) {
+            onChanged: (bool value) {
               // This is called when the user toggles the switch.
               setState(() {
-                _enabled = value!;
+                _enabled = value;
               });
             },
             value: _enabled,

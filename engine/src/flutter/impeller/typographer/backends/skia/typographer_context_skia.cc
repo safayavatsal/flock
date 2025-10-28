@@ -20,7 +20,6 @@
 #include "impeller/core/buffer_view.h"
 #include "impeller/core/formats.h"
 #include "impeller/core/host_buffer.h"
-#include "impeller/core/platform.h"
 #include "impeller/core/texture_descriptor.h"
 #include "impeller/geometry/rect.h"
 #include "impeller/geometry/size.h"
@@ -205,6 +204,10 @@ static ISize ComputeNextAtlasSize(
   return {};
 }
 
+static Point SubpixelPositionToPoint(SubpixelPosition pos) {
+  return Point((pos & 0xff) / 4.f, (pos >> 2 & 0xff) / 4.f);
+}
+
 static void DrawGlyph(SkCanvas* canvas,
                       const SkPoint position,
                       const ScaledFont& scaled_font,
@@ -222,25 +225,32 @@ static void DrawGlyph(SkCanvas* canvas,
   sk_font.setHinting(SkFontHinting::kSlight);
   sk_font.setEmbolden(metrics.embolden);
   sk_font.setSubpixel(true);
-  sk_font.setSize(sk_font.getSize() * scaled_font.scale);
+  sk_font.setSize(sk_font.getSize() * static_cast<Scalar>(scaled_font.scale));
 
   auto glyph_color = prop.has_value() ? prop->color.ToARGB() : SK_ColorBLACK;
 
   SkPaint glyph_paint;
   glyph_paint.setColor(glyph_color);
   glyph_paint.setBlendMode(SkBlendMode::kSrc);
-  if (prop.has_value() && prop->stroke) {
-    glyph_paint.setStroke(true);
-    glyph_paint.setStrokeWidth(prop->stroke_width * scaled_font.scale);
-    glyph_paint.setStrokeCap(ToSkiaCap(prop->stroke_cap));
-    glyph_paint.setStrokeJoin(ToSkiaJoin(prop->stroke_join));
-    glyph_paint.setStrokeMiter(prop->stroke_miter);
+  if (prop.has_value()) {
+    auto stroke = prop->stroke;
+    if (stroke.has_value()) {
+      glyph_paint.setStroke(true);
+      glyph_paint.setStrokeWidth(stroke->width *
+                                 static_cast<Scalar>(scaled_font.scale));
+      glyph_paint.setStrokeCap(ToSkiaCap(stroke->cap));
+      glyph_paint.setStrokeJoin(ToSkiaJoin(stroke->join));
+      glyph_paint.setStrokeMiter(stroke->miter_limit);
+    } else {
+      glyph_paint.setStroke(false);
+    }
   }
   canvas->save();
-  canvas->translate(glyph.subpixel_offset.x, glyph.subpixel_offset.y);
-  canvas->drawGlyphs(1u,         // count
-                     &glyph_id,  // glyphs
-                     &position,  // positions
+  Point subpixel_offset = SubpixelPositionToPoint(glyph.subpixel_offset);
+  canvas->translate(subpixel_offset.x, subpixel_offset.y);
+  // Draw a single glyph in the bounds
+  canvas->drawGlyphs({&glyph_id, 1u},  // glyphs
+                     {&position, 1u},  // positions
                      SkPoint::Make(-scaled_bounds.GetLeft(),
                                    -scaled_bounds.GetTop()),  // origin
                      sk_font,                                 // font
@@ -254,7 +264,7 @@ static void DrawGlyph(SkCanvas* canvas,
 /// This is only safe for use when updating a fresh texture.
 static bool BulkUpdateAtlasBitmap(const GlyphAtlas& atlas,
                                   std::shared_ptr<BlitPass>& blit_pass,
-                                  HostBuffer& host_buffer,
+                                  HostBuffer& data_host_buffer,
                                   const std::shared_ptr<Texture>& texture,
                                   const std::vector<FontGlyphPair>& new_pairs,
                                   size_t start_index,
@@ -298,12 +308,12 @@ static bool BulkUpdateAtlasBitmap(const GlyphAtlas& atlas,
 
   // Writing to a malloc'd buffer and then copying to the staging buffers
   // benchmarks as substantially faster on a number of Android devices.
-  BufferView buffer_view = host_buffer.Emplace(
+  BufferView buffer_view = data_host_buffer.Emplace(
       bitmap.getAddr(0, 0),
       texture->GetSize().Area() *
           BytesPerPixelForPixelFormat(
               atlas.GetTexture()->GetTextureDescriptor().format),
-      DefaultUniformAlignment());
+      data_host_buffer.GetMinimumUniformAlignment());
 
   return blit_pass->AddCopy(std::move(buffer_view),  //
                             texture,                 //
@@ -313,7 +323,7 @@ static bool BulkUpdateAtlasBitmap(const GlyphAtlas& atlas,
 
 static bool UpdateAtlasBitmap(const GlyphAtlas& atlas,
                               std::shared_ptr<BlitPass>& blit_pass,
-                              HostBuffer& host_buffer,
+                              HostBuffer& data_host_buffer,
                               const std::shared_ptr<Texture>& texture,
                               const std::vector<FontGlyphPair>& new_pairs,
                               size_t start_index,
@@ -360,11 +370,11 @@ static bool UpdateAtlasBitmap(const GlyphAtlas& atlas,
 
     // Writing to a malloc'd buffer and then copying to the staging buffers
     // benchmarks as substantially faster on a number of Android devices.
-    BufferView buffer_view = host_buffer.Emplace(
+    BufferView buffer_view = data_host_buffer.Emplace(
         bitmap.getAddr(0, 0),
         size.Area() * BytesPerPixelForPixelFormat(
                           atlas.GetTexture()->GetTextureDescriptor().format),
-        DefaultUniformAlignment());
+        data_host_buffer.GetMinimumUniformAlignment());
 
     // convert_to_read is set to false so that the texture remains in a transfer
     // dst layout until we finish writing to it below. This only has an impact
@@ -391,16 +401,17 @@ static Rect ComputeGlyphSize(const SkFont& font,
   SkPaint glyph_paint;
   if (glyph.properties.has_value() && glyph.properties->stroke) {
     glyph_paint.setStroke(true);
-    glyph_paint.setStrokeWidth(glyph.properties->stroke_width * scale);
-    glyph_paint.setStrokeCap(ToSkiaCap(glyph.properties->stroke_cap));
-    glyph_paint.setStrokeJoin(ToSkiaJoin(glyph.properties->stroke_join));
-    glyph_paint.setStrokeMiter(glyph.properties->stroke_miter);
+    glyph_paint.setStrokeWidth(glyph.properties->stroke->width * scale);
+    glyph_paint.setStrokeCap(ToSkiaCap(glyph.properties->stroke->cap));
+    glyph_paint.setStrokeJoin(ToSkiaJoin(glyph.properties->stroke->join));
+    glyph_paint.setStrokeMiter(glyph.properties->stroke->miter_limit);
   }
-  font.getBounds(&glyph.glyph.index, 1, &scaled_bounds, &glyph_paint);
+  // Get bounds for a single glyph
+  font.getBounds({&glyph.glyph.index, 1}, {&scaled_bounds, 1}, &glyph_paint);
 
   // Expand the bounds of glyphs at subpixel offsets by 2 in the x direction.
   Scalar adjustment = 0.0;
-  if (glyph.subpixel_offset != Point(0, 0)) {
+  if (glyph.subpixel_offset != SubpixelPosition::kSubpixel00) {
     adjustment = 1.0;
   }
   return Rect::MakeLTRB(scaled_bounds.fLeft - adjustment, scaled_bounds.fTop,
@@ -453,14 +464,14 @@ TypographerContextSkia::CollectNewGlyphs(
       // Rather than computing the bounds at the requested point size and
       // scaling up the bounds, we scale up the font size and request the
       // bounds. This seems to give more accurate bounds information.
-      sk_font.setSize(sk_font.getSize() * scaled_font.scale);
+      sk_font.setSize(sk_font.getSize() *
+                      static_cast<Scalar>(scaled_font.scale));
       sk_font.setSubpixel(true);
 
       for (const auto& glyph_position : run.GetGlyphPositions()) {
-        Point subpixel = TextFrame::ComputeSubpixelPosition(
+        SubpixelPosition subpixel = TextFrame::ComputeSubpixelPosition(
             glyph_position, scaled_font.font.GetAxisAlignment(),
-            frame->GetTransform() *
-                Matrix::MakeTranslation(frame->GetOffset()));
+            frame->GetOffsetTransform());
         SubpixelGlyph subpixel_glyph(glyph_position.glyph, subpixel,
                                      frame->GetProperties());
         const auto& font_glyph_bounds =
@@ -468,8 +479,8 @@ TypographerContextSkia::CollectNewGlyphs(
 
         if (!font_glyph_bounds.has_value()) {
           new_glyphs.push_back(FontGlyphPair{scaled_font, subpixel_glyph});
-          auto glyph_bounds =
-              ComputeGlyphSize(sk_font, subpixel_glyph, scaled_font.scale);
+          auto glyph_bounds = ComputeGlyphSize(
+              sk_font, subpixel_glyph, static_cast<Scalar>(scaled_font.scale));
           glyph_sizes.push_back(glyph_bounds);
 
           auto frame_bounds = FrameBounds{
@@ -492,7 +503,7 @@ TypographerContextSkia::CollectNewGlyphs(
 std::shared_ptr<GlyphAtlas> TypographerContextSkia::CreateGlyphAtlas(
     Context& context,
     GlyphAtlas::Type type,
-    HostBuffer& host_buffer,
+    HostBuffer& data_host_buffer,
     const std::shared_ptr<GlyphAtlasContext>& atlas_context,
     const std::vector<std::shared_ptr<TextFrame>>& text_frames) const {
   TRACE_EVENT0("impeller", __FUNCTION__);
@@ -554,7 +565,7 @@ std::shared_ptr<GlyphAtlas> TypographerContextSkia::CreateGlyphAtlas(
     // Step 4a: Draw new font-glyph pairs into the a host buffer and encode
     // the uploads into the blit pass.
     // ---------------------------------------------------------------------------
-    if (!UpdateAtlasBitmap(*last_atlas, blit_pass, host_buffer,
+    if (!UpdateAtlasBitmap(*last_atlas, blit_pass, data_host_buffer,
                            last_atlas->GetTexture(), new_glyphs, 0,
                            first_missing_index)) {
       return nullptr;
@@ -660,7 +671,7 @@ std::shared_ptr<GlyphAtlas> TypographerContextSkia::CreateGlyphAtlas(
   // Step 4a: Draw new font-glyph pairs into the a host buffer and encode
   // the uploads into the blit pass.
   // ---------------------------------------------------------------------------
-  if (!BulkUpdateAtlasBitmap(*new_atlas, blit_pass, host_buffer,
+  if (!BulkUpdateAtlasBitmap(*new_atlas, blit_pass, data_host_buffer,
                              new_atlas->GetTexture(), new_glyphs,
                              first_missing_index, new_glyphs.size())) {
     return nullptr;
