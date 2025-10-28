@@ -312,7 +312,9 @@ void main() {
     }
 
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: Center(child: buildTable(source, rowsPerPage)))),
+      MaterialApp(
+        home: Scaffold(body: Center(child: buildTable(source, rowsPerPage))),
+      ),
     );
 
     expect(
@@ -1112,7 +1114,7 @@ void main() {
       addTearDown(source.dispose);
 
       return MaterialApp(
-        theme: ThemeData.light().copyWith(
+        theme: ThemeData(
           dataTableTheme: const DataTableThemeData(decoration: BoxDecoration(color: Colors.white)),
         ),
         home: PaginatedDataTable(
@@ -1128,8 +1130,9 @@ void main() {
     }
 
     await tester.pumpWidget(buildTable());
-    final Finder tableContainerFinder =
-        find.ancestor(of: find.byType(Table), matching: find.byType(Container)).first;
+    final Finder tableContainerFinder = find
+        .ancestor(of: find.byType(Table), matching: find.byType(Container))
+        .first;
     expect(tester.widget<Container>(tableContainerFinder).decoration, const BoxDecoration());
 
     // Reset the surface size.
@@ -1280,8 +1283,10 @@ void main() {
     expect(find.text('1 item selected'), findsOneWidget);
 
     // The color of the selected text item should be the colorScheme.secondary
-    final TextStyle selectedTextStyle =
-        tester.renderObject<RenderParagraph>(find.text('1 item selected')).text.style!;
+    final TextStyle selectedTextStyle = tester
+        .renderObject<RenderParagraph>(find.text('1 item selected'))
+        .text
+        .style!;
     expect(selectedTextStyle.color, equals(selectedTextColor));
 
     await binding.setSurfaceSize(null);
@@ -1308,7 +1313,7 @@ void main() {
       ),
     );
 
-    final Iterable<Icon> icons = tester.widgetList(find.byType(Icon));
+    final Iterable<IconButton> icons = tester.widgetList(find.byType(IconButton));
 
     expect(icons.elementAt(0).color, arrowHeadColor);
     expect(icons.elementAt(1).color, arrowHeadColor);
@@ -1418,7 +1423,7 @@ void main() {
   });
 
   testWidgets('PaginatedDataTable custom heading row color', (WidgetTester tester) async {
-    const MaterialStateProperty<Color> headingRowColor = MaterialStatePropertyAll<Color>(
+    const WidgetStateProperty<Color> headingRowColor = MaterialStatePropertyAll<Color>(
       Color(0xffFF0000),
     );
 
@@ -1444,7 +1449,7 @@ void main() {
     final Table table = tester.widget(find.byType(Table));
     final TableRow tableRow = table.children[0];
     final BoxDecoration tableRowBoxDecoration = tableRow.decoration! as BoxDecoration;
-    expect(tableRowBoxDecoration.color, headingRowColor.resolve(<MaterialState>{}));
+    expect(tableRowBoxDecoration.color, headingRowColor.resolve(<WidgetState>{}));
   });
 
   testWidgets('PaginatedDataTable respects custom dividerThickness', (WidgetTester tester) async {

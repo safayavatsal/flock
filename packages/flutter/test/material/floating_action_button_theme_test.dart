@@ -28,7 +28,7 @@ void main() {
       const ColorScheme colorScheme = ColorScheme.light();
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData.from(useMaterial3: true, colorScheme: colorScheme),
+          theme: ThemeData.from(colorScheme: colorScheme),
           home: Scaffold(
             floatingActionButton: FloatingActionButton(
               onPressed: () {},
@@ -273,7 +273,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(useMaterial3: true, colorScheme: colorScheme).copyWith(
+          theme: ThemeData(colorScheme: colorScheme).copyWith(
             floatingActionButtonTheme: const FloatingActionButtonThemeData(
               extendedSizeConstraints: constraints,
               extendedIconLabelSpacing: iconLabelSpacing,
@@ -378,7 +378,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          theme: ThemeData(useMaterial3: true, colorScheme: colorScheme).copyWith(
+          theme: ThemeData(colorScheme: colorScheme).copyWith(
             floatingActionButtonTheme: const FloatingActionButtonThemeData(
               extendedIconLabelSpacing: 25.0,
               extendedPadding: EdgeInsetsDirectional.only(start: 7.0, end: 8.0),
@@ -476,11 +476,10 @@ void main() {
     final DiagnosticPropertiesBuilder builder = DiagnosticPropertiesBuilder();
     const FloatingActionButtonThemeData().debugFillProperties(builder);
 
-    final List<String> description =
-        builder.properties
-            .where((DiagnosticsNode node) => !node.isFiltered(DiagnosticLevel.info))
-            .map((DiagnosticsNode node) => node.toString())
-            .toList();
+    final List<String> description = builder.properties
+        .where((DiagnosticsNode node) => !node.isFiltered(DiagnosticLevel.info))
+        .map((DiagnosticsNode node) => node.toString())
+        .toList();
 
     expect(description, <String>[]);
   });
@@ -508,14 +507,13 @@ void main() {
       extendedIconLabelSpacing: 12,
       extendedPadding: EdgeInsetsDirectional.only(start: 7.0, end: 8.0),
       extendedTextStyle: TextStyle(letterSpacing: 2.0),
-      mouseCursor: MaterialStateMouseCursor.clickable,
+      mouseCursor: WidgetStateMouseCursor.clickable,
     ).debugFillProperties(builder);
 
-    final List<String> description =
-        builder.properties
-            .where((DiagnosticsNode node) => !node.isFiltered(DiagnosticLevel.info))
-            .map((DiagnosticsNode node) => node.toString())
-            .toList();
+    final List<String> description = builder.properties
+        .where((DiagnosticsNode node) => !node.isFiltered(DiagnosticLevel.info))
+        .map((DiagnosticsNode node) => node.toString())
+        .toList();
 
     expect(description, <String>[
       'foregroundColor: ${const Color(0xfeedfeed)}',
@@ -549,7 +547,7 @@ void main() {
         MaterialApp(
           theme: ThemeData().copyWith(
             floatingActionButtonTheme: FloatingActionButtonThemeData(
-              mouseCursor: MaterialStateProperty.all(SystemMouseCursors.text),
+              mouseCursor: WidgetStateProperty.all(SystemMouseCursors.text),
             ),
           ),
           home: Scaffold(

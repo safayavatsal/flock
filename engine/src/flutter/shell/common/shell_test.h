@@ -92,6 +92,7 @@ class ShellTest : public FixtureTest {
                            std::unique_ptr<PlatformMessage> message);
 
   void SendSemanticsAction(Shell* shell,
+                           int64_t view_id,
                            int32_t node_id,
                            SemanticsAction action,
                            fml::MallocMapping args);
@@ -161,6 +162,10 @@ class ShellTest : public FixtureTest {
   static int UnreportedTimingsCount(Shell* shell);
 
   static void TurnOffGPU(Shell* shell, bool value);
+
+  static bool ShouldDiscardLayerTree(Shell* shell,
+                                     int64_t view_id,
+                                     const flutter::LayerTree& tree);
 
  private:
   ThreadHost thread_host_;

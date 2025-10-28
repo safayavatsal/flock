@@ -14,7 +14,10 @@ import '../widgets/semantics_tester.dart';
 Widget wrap({required Widget child}) {
   return MediaQuery(
     data: const MediaQueryData(),
-    child: Directionality(textDirection: TextDirection.ltr, child: Material(child: child)),
+    child: Directionality(
+      textDirection: TextDirection.ltr,
+      child: Material(child: child),
+    ),
   );
 }
 
@@ -196,7 +199,7 @@ void main() {
       MediaQuery(
         data: const MediaQueryData(padding: EdgeInsets.all(8.0)),
         child: Theme(
-          data: ThemeData(useMaterial3: true),
+          data: ThemeData(),
           child: Directionality(
             textDirection: TextDirection.ltr,
             child: StatefulBuilder(
@@ -507,10 +510,10 @@ void main() {
 
     Widget buildFrame({Color? activeColor, Color? thumbColor}) {
       return MaterialApp(
-        theme: ThemeData.light().copyWith(
+        theme: ThemeData(
           switchTheme: SwitchThemeData(
-            thumbColor: MaterialStateProperty.resolveWith<Color?>((Set<MaterialState> states) {
-              return states.contains(MaterialState.selected) ? thumbColor : null;
+            thumbColor: WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
+              return states.contains(WidgetState.selected) ? thumbColor : null;
             }),
           ),
         ),
@@ -732,20 +735,20 @@ void main() {
     const Color inactiveEnabledThumbColor = Color(0xFF000003);
     const Color inactiveDisabledThumbColor = Color(0xFF000004);
 
-    Color getThumbColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
-        if (states.contains(MaterialState.selected)) {
+    Color getThumbColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.disabled)) {
+        if (states.contains(WidgetState.selected)) {
           return activeDisabledThumbColor;
         }
         return inactiveDisabledThumbColor;
       }
-      if (states.contains(MaterialState.selected)) {
+      if (states.contains(WidgetState.selected)) {
         return activeEnabledThumbColor;
       }
       return inactiveEnabledThumbColor;
     }
 
-    final MaterialStateProperty<Color> thumbColor = MaterialStateColor.resolveWith(getThumbColor);
+    final WidgetStateProperty<Color> thumbColor = WidgetStateColor.resolveWith(getThumbColor);
 
     Widget buildSwitchListTile({required bool enabled, required bool selected}) {
       return MaterialApp(
@@ -827,24 +830,23 @@ void main() {
     const Color inactiveEnabledThumbColor = Color(0xFF000003);
     const Color inactiveDisabledThumbColor = Color(0xFF000004);
 
-    Color getThumbColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
-        if (states.contains(MaterialState.selected)) {
+    Color getThumbColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.disabled)) {
+        if (states.contains(WidgetState.selected)) {
           return activeDisabledThumbColor;
         }
         return inactiveDisabledThumbColor;
       }
-      if (states.contains(MaterialState.selected)) {
+      if (states.contains(WidgetState.selected)) {
         return activeEnabledThumbColor;
       }
       return inactiveEnabledThumbColor;
     }
 
-    final MaterialStateProperty<Color> thumbColor = MaterialStateColor.resolveWith(getThumbColor);
+    final WidgetStateProperty<Color> thumbColor = WidgetStateColor.resolveWith(getThumbColor);
 
     Widget buildSwitchListTile({required bool enabled, required bool selected}) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: Material(
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -909,17 +911,17 @@ void main() {
     const Color hoveredThumbColor = Color(0xFF4caf50);
     const Color pressedThumbColor = Color(0xFFF44336);
 
-    Color getThumbColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.pressed)) {
+    Color getThumbColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
         return pressedThumbColor;
       }
-      if (states.contains(MaterialState.hovered)) {
+      if (states.contains(WidgetState.hovered)) {
         return hoveredThumbColor;
       }
       return Colors.transparent;
     }
 
-    final MaterialStateProperty<Color> thumbColor = MaterialStateColor.resolveWith(getThumbColor);
+    final WidgetStateProperty<Color> thumbColor = WidgetStateColor.resolveWith(getThumbColor);
 
     Widget buildSwitchListTile() {
       return MaterialApp(
@@ -976,21 +978,20 @@ void main() {
     const Color hoveredThumbColor = Color(0xFF4caf50);
     const Color pressedThumbColor = Color(0xFFF44336);
 
-    Color getThumbColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.pressed)) {
+    Color getThumbColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.pressed)) {
         return pressedThumbColor;
       }
-      if (states.contains(MaterialState.hovered)) {
+      if (states.contains(WidgetState.hovered)) {
         return hoveredThumbColor;
       }
       return Colors.transparent;
     }
 
-    final MaterialStateProperty<Color> thumbColor = MaterialStateColor.resolveWith(getThumbColor);
+    final WidgetStateProperty<Color> thumbColor = WidgetStateColor.resolveWith(getThumbColor);
 
     Widget buildSwitchListTile() {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: Material(
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -1038,20 +1039,20 @@ void main() {
     const Color inactiveEnabledTrackColor = Color(0xFF000003);
     const Color inactiveDisabledTrackColor = Color(0xFF000004);
 
-    Color getTrackColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
-        if (states.contains(MaterialState.selected)) {
+    Color getTrackColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.disabled)) {
+        if (states.contains(WidgetState.selected)) {
           return activeDisabledTrackColor;
         }
         return inactiveDisabledTrackColor;
       }
-      if (states.contains(MaterialState.selected)) {
+      if (states.contains(WidgetState.selected)) {
         return activeEnabledTrackColor;
       }
       return inactiveEnabledTrackColor;
     }
 
-    final MaterialStateProperty<Color> trackColor = MaterialStateColor.resolveWith(getTrackColor);
+    final WidgetStateProperty<Color> trackColor = WidgetStateColor.resolveWith(getTrackColor);
 
     Widget buildSwitchListTile({required bool enabled, required bool selected}) {
       return wrap(
@@ -1102,14 +1103,14 @@ void main() {
     tester.binding.focusManager.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
     const Color hoveredTrackColor = Color(0xFF4caf50);
 
-    Color getTrackColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.hovered)) {
+    Color getTrackColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.hovered)) {
         return hoveredTrackColor;
       }
       return Colors.transparent;
     }
 
-    final MaterialStateProperty<Color> trackColor = MaterialStateColor.resolveWith(getTrackColor);
+    final WidgetStateProperty<Color> trackColor = WidgetStateColor.resolveWith(getTrackColor);
 
     Widget buildSwitchListTile() {
       return wrap(
@@ -1140,9 +1141,9 @@ void main() {
     const Icon activeIcon = Icon(Icons.check);
     const Icon inactiveIcon = Icon(Icons.close);
 
-    MaterialStateProperty<Icon?> thumbIcon(Icon? activeIcon, Icon? inactiveIcon) {
-      return MaterialStateProperty.resolveWith<Icon?>((Set<MaterialState> states) {
-        if (states.contains(MaterialState.selected)) {
+    WidgetStateProperty<Icon?> thumbIcon(Icon? activeIcon, Icon? inactiveIcon) {
+      return WidgetStateProperty.resolveWith<Icon?>((Set<WidgetState> states) {
+        if (states.contains(WidgetState.selected)) {
           return activeIcon;
         }
         return inactiveIcon;
@@ -1156,7 +1157,6 @@ void main() {
       Icon? inactiveIcon,
     }) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: wrap(
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -1177,7 +1177,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     final Switch switchWidget0 = tester.widget<Switch>(find.byType(Switch));
-    expect(switchWidget0.thumbIcon?.resolve(<MaterialState>{MaterialState.selected}), activeIcon);
+    expect(switchWidget0.thumbIcon?.resolve(<WidgetState>{WidgetState.selected}), activeIcon);
     expect(
       Material.of(tester.element(find.byType(Switch))),
       paints
@@ -1192,7 +1192,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     final Switch switchWidget1 = tester.widget<Switch>(find.byType(Switch));
-    expect(switchWidget1.thumbIcon?.resolve(<MaterialState>{}), inactiveIcon);
+    expect(switchWidget1.thumbIcon?.resolve(<WidgetState>{}), inactiveIcon);
     expect(
       Material.of(tester.element(find.byType(Switch))),
       paints
@@ -1208,7 +1208,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     final Switch switchWidget2 = tester.widget<Switch>(find.byType(Switch));
-    expect(switchWidget2.thumbIcon?.resolve(<MaterialState>{MaterialState.selected}), activeIcon);
+    expect(switchWidget2.thumbIcon?.resolve(<WidgetState>{WidgetState.selected}), activeIcon);
     expect(
       Material.of(tester.element(find.byType(Switch))),
       paints
@@ -1223,7 +1223,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     final Switch switchWidget3 = tester.widget<Switch>(find.byType(Switch));
-    expect(switchWidget3.thumbIcon?.resolve(<MaterialState>{}), inactiveIcon);
+    expect(switchWidget3.thumbIcon?.resolve(<WidgetState>{}), inactiveIcon);
     expect(
       Material.of(tester.element(find.byType(Switch))),
       paints
@@ -1280,7 +1280,6 @@ void main() {
   ) async {
     Widget buildSwitchListTile(MaterialTapTargetSize materialTapTargetSize) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: Material(
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -1353,7 +1352,7 @@ void main() {
   ) async {
     Widget buildSwitchListTile(bool applyCupertinoTheme, TargetPlatform platform) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true, platform: platform),
+        theme: ThemeData(platform: platform),
         home: Material(
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -1426,7 +1425,6 @@ void main() {
   ) async {
     Widget buildSwitchListTile(MaterialTapTargetSize materialTapTargetSize) {
       return MaterialApp(
-        theme: ThemeData(useMaterial3: true),
         home: Material(
           child: StatefulBuilder(
             builder: (BuildContext context, StateSetter setState) {
@@ -1595,14 +1593,14 @@ void main() {
       const Color hoverOverlayColor = Color(0xFF000003);
       const Color hoverColor = Color(0xFF000005);
 
-      Color? getOverlayColor(Set<MaterialState> states) {
-        if (states.contains(MaterialState.pressed)) {
-          if (states.contains(MaterialState.selected)) {
+      Color? getOverlayColor(Set<WidgetState> states) {
+        if (states.contains(WidgetState.pressed)) {
+          if (states.contains(WidgetState.selected)) {
             return activePressedOverlayColor;
           }
           return inactivePressedOverlayColor;
         }
-        if (states.contains(MaterialState.hovered)) {
+        if (states.contains(WidgetState.hovered)) {
           return hoverOverlayColor;
         }
         return null;
@@ -1614,13 +1612,13 @@ void main() {
             body: SwitchListTile(
               value: active,
               onChanged: (_) {},
-              thumbColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-                if (states.contains(MaterialState.selected)) {
+              thumbColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                if (states.contains(WidgetState.selected)) {
                   return activeThumbColor;
                 }
                 return inactiveThumbColor;
               }),
-              overlayColor: useOverlay ? MaterialStateProperty.resolveWith(getOverlayColor) : null,
+              overlayColor: useOverlay ? WidgetStateProperty.resolveWith(getOverlayColor) : null,
               hoverColor: hoverColor,
             ),
           ),
@@ -1706,20 +1704,20 @@ void main() {
     const Color inactiveEnabledTrackOutlineColor = Color(0xFF000003);
     const Color inactiveDisabledTrackOutlineColor = Color(0xFF000004);
 
-    Color getOutlineColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.disabled)) {
-        if (states.contains(MaterialState.selected)) {
+    Color getOutlineColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.disabled)) {
+        if (states.contains(WidgetState.selected)) {
           return activeDisabledTrackOutlineColor;
         }
         return inactiveDisabledTrackOutlineColor;
       }
-      if (states.contains(MaterialState.selected)) {
+      if (states.contains(WidgetState.selected)) {
         return activeEnabledTrackOutlineColor;
       }
       return inactiveEnabledTrackOutlineColor;
     }
 
-    final MaterialStateProperty<Color> trackOutlineColor = MaterialStateColor.resolveWith(
+    final WidgetStateProperty<Color> trackOutlineColor = WidgetStateColor.resolveWith(
       getOutlineColor,
     );
 
@@ -1782,14 +1780,14 @@ void main() {
     tester.binding.focusManager.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
     const Color hoveredTrackColor = Color(0xFF4caf50);
 
-    Color getTrackOutlineColor(Set<MaterialState> states) {
-      if (states.contains(MaterialState.hovered)) {
+    Color getTrackOutlineColor(Set<WidgetState> states) {
+      if (states.contains(WidgetState.hovered)) {
         return hoveredTrackColor;
       }
       return Colors.transparent;
     }
 
-    final MaterialStateProperty<Color> outlineColor = MaterialStateColor.resolveWith(
+    final WidgetStateProperty<Color> outlineColor = WidgetStateColor.resolveWith(
       getTrackOutlineColor,
     );
 
@@ -1894,5 +1892,306 @@ void main() {
     final Finder platform = find.text('SwitchListTile');
     final Offset offsetPlatform = tester.getTopLeft(platform);
     expect(offsetPlatform, const Offset(16.0, 16.0));
+  });
+
+  testWidgets('SwitchListTile isThreeLine', (WidgetTester tester) async {
+    const double height = 300;
+    const double switchTop = 130.0;
+
+    Widget buildFrame({bool? themeDataIsThreeLine, bool? themeIsThreeLine, bool? isThreeLine}) {
+      return MaterialApp(
+        key: UniqueKey(),
+        theme: themeDataIsThreeLine != null
+            ? ThemeData(listTileTheme: ListTileThemeData(isThreeLine: themeDataIsThreeLine))
+            : null,
+        home: Material(
+          child: ListTileTheme(
+            data: themeIsThreeLine != null
+                ? ListTileThemeData(isThreeLine: themeIsThreeLine)
+                : null,
+            child: ListView(
+              children: <Widget>[
+                SwitchListTile(
+                  isThreeLine: isThreeLine,
+                  title: const Text('A'),
+                  subtitle: const Text('A\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM'),
+                  value: false,
+                  onChanged: null,
+                ),
+                SwitchListTile(
+                  isThreeLine: isThreeLine,
+                  title: const Text('A'),
+                  subtitle: const Text('A'),
+                  value: false,
+                  onChanged: null,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    void expectTwoLine() {
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(0)),
+        const Rect.fromLTWH(0.0, 0.0, 800.0, height),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(0)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, switchTop, 60.0, 40.0),
+      );
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(1)),
+        const Rect.fromLTWH(0.0, height, 800.0, 72.0),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(1)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, height + 16, 60.0, 40.0),
+      );
+    }
+
+    void expectThreeLine() {
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(0)),
+        const Rect.fromLTWH(0.0, 0.0, 800.0, height),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(0)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, 8.0, 60.0, 40.0),
+      );
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(1)),
+        const Rect.fromLTWH(0.0, height, 800.0, 88.0),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(1)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, height + 8.0, 60.0, 40.0),
+      );
+    }
+
+    await tester.pumpWidget(buildFrame());
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: false, themeIsThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: true, themeIsThreeLine: false));
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(isThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeIsThreeLine: true, isThreeLine: false));
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: true, isThreeLine: false));
+    expectTwoLine();
+
+    await tester.pumpWidget(
+      buildFrame(themeDataIsThreeLine: true, themeIsThreeLine: true, isThreeLine: false),
+    );
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(themeIsThreeLine: false, isThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: false, isThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(
+      buildFrame(themeDataIsThreeLine: false, themeIsThreeLine: false, isThreeLine: true),
+    );
+    expectThreeLine();
+  });
+
+  testWidgets('SwitchListTile.adaptive isThreeLine', (WidgetTester tester) async {
+    const double height = 300;
+    const double switchTop = 130.0;
+
+    Widget buildFrame({bool? themeDataIsThreeLine, bool? themeIsThreeLine, bool? isThreeLine}) {
+      return MaterialApp(
+        key: UniqueKey(),
+        theme: ThemeData(
+          platform: TargetPlatform.iOS,
+          listTileTheme: themeDataIsThreeLine != null
+              ? ListTileThemeData(isThreeLine: themeDataIsThreeLine)
+              : null,
+        ),
+        home: Material(
+          child: ListTileTheme(
+            data: themeIsThreeLine != null
+                ? ListTileThemeData(isThreeLine: themeIsThreeLine)
+                : null,
+            child: ListView(
+              children: <Widget>[
+                SwitchListTile.adaptive(
+                  isThreeLine: isThreeLine,
+                  title: const Text('A'),
+                  subtitle: const Text('A\nB\nC\nD\nE\nF\nG\nH\nI\nJ\nK\nL\nM'),
+                  value: false,
+                  onChanged: null,
+                ),
+                SwitchListTile.adaptive(
+                  isThreeLine: isThreeLine,
+                  title: const Text('A'),
+                  subtitle: const Text('A'),
+                  value: false,
+                  onChanged: null,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    void expectTwoLine() {
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(0)),
+        const Rect.fromLTWH(0.0, 0.0, 800.0, height),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(0)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, switchTop, 60.0, 40.0),
+      );
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(1)),
+        const Rect.fromLTWH(0.0, height, 800.0, 72.0),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(1)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, height + 16, 60.0, 40.0),
+      );
+    }
+
+    void expectThreeLine() {
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(0)),
+        const Rect.fromLTWH(0.0, 0.0, 800.0, height),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(0)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, 8.0, 60.0, 40.0),
+      );
+      expect(
+        tester.getRect(find.byType(SwitchListTile).at(1)),
+        const Rect.fromLTWH(0.0, height, 800.0, 88.0),
+      );
+      expect(
+        tester.getRect(find.byType(Switch).at(1)),
+        const Rect.fromLTWH(800.0 - 60.0 - 24.0, height + 8.0, 60.0, 40.0),
+      );
+    }
+
+    await tester.pumpWidget(buildFrame());
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: false, themeIsThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: true, themeIsThreeLine: false));
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(isThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeIsThreeLine: true, isThreeLine: false));
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: true, isThreeLine: false));
+    expectTwoLine();
+
+    await tester.pumpWidget(
+      buildFrame(themeDataIsThreeLine: true, themeIsThreeLine: true, isThreeLine: false),
+    );
+    expectTwoLine();
+
+    await tester.pumpWidget(buildFrame(themeIsThreeLine: false, isThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(buildFrame(themeDataIsThreeLine: false, isThreeLine: true));
+    expectThreeLine();
+
+    await tester.pumpWidget(
+      buildFrame(themeDataIsThreeLine: false, themeIsThreeLine: false, isThreeLine: true),
+    );
+    expectThreeLine();
+  });
+
+  testWidgets('Material3 - SwitchListTile activeThumbColor', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Material(
+              child: SwitchListTile(
+                value: true,
+                selected: true,
+                onChanged: (_) {},
+                activeColor: Colors.red[500],
+                activeThumbColor: Colors.yellow[500],
+                activeTrackColor: Colors.green[500],
+                title: const Text('title'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    expect(
+      Material.of(tester.element(find.byType(Switch))),
+      paints
+        ..rrect(color: Colors.green[500])
+        ..rrect()
+        ..rrect(color: Colors.yellow[500]),
+    );
+    final RenderParagraph title = tester.renderObject(
+      find.descendant(of: find.byType(ListTile), matching: find.text('title')),
+    );
+    expect(title.text.style!.color, Colors.yellow[500]);
+  });
+
+  testWidgets('Material3 - SwitchListTile.adaptive activeThumbColor', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Material(
+              child: SwitchListTile.adaptive(
+                value: true,
+                selected: true,
+                onChanged: (_) {},
+                activeColor: Colors.red[500],
+                activeThumbColor: Colors.yellow[500],
+                activeTrackColor: Colors.green[500],
+                title: const Text('title'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+
+    expect(
+      Material.of(tester.element(find.byType(Switch))),
+      paints
+        ..rrect(color: Colors.green[500])
+        ..rrect()
+        ..rrect(color: Colors.yellow[500]),
+    );
+    final RenderParagraph title = tester.renderObject(
+      find.descendant(of: find.byType(ListTile), matching: find.text('title')),
+    );
+    expect(title.text.style!.color, Colors.yellow[500]);
   });
 }

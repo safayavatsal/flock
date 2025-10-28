@@ -6,6 +6,8 @@
 
 #include <cmath>
 
+#include "flutter/display_list/geometry/dl_geometry_conversions.h"
+#include "flutter/display_list/geometry/dl_path_builder.h"
 #include "flutter/lib/ui/floating_point.h"
 #include "flutter/lib/ui/painting/matrix.h"
 #include "flutter/lib/ui/ui_dart_state.h"
@@ -192,13 +194,24 @@ void CanvasPath::addArc(double left,
 }
 
 void CanvasPath::addPolygon(const tonic::Float32List& points, bool close) {
-  sk_path_.addPoly(reinterpret_cast<const SkPoint*>(points.data()),
-                   points.num_elements() / 2, close);
+  SkSpan<const SkPoint> ptsSpan = {
+      reinterpret_cast<const SkPoint*>(points.data()),
+      points.num_elements() / 2};
+  sk_path_.addPoly(ptsSpan, close);
   resetVolatility();
 }
 
 void CanvasPath::addRRect(const RRect& rrect) {
   sk_path_.addRRect(ToSkRRect(rrect.rrect));
+  resetVolatility();
+}
+
+void CanvasPath::addRSuperellipse(const RSuperellipse* rsuperellipse) {
+  DlPathBuilder builder;
+  builder.AddRoundSuperellipse(DlRoundSuperellipse::MakeRectRadii(
+      rsuperellipse->bounds(), rsuperellipse->radii()));
+  sk_path_.addPath(builder.TakePath().GetSkPath(), SkPath::kAppend_AddPathMode);
+
   resetVolatility();
 }
 

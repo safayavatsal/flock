@@ -10,6 +10,7 @@
 #include "flutter/display_list/effects/dl_image_filter.h"
 #include "flutter/display_list/effects/dl_runtime_effect.h"
 #include "flutter/impeller/display_list/aiks_unittests.h"
+#include "flutter/impeller/display_list/dl_runtime_effect_impeller.h"
 
 namespace impeller {
 namespace testing {
@@ -28,7 +29,7 @@ std::shared_ptr<DlColorSource> MakeRuntimeEffect(
   FML_CHECK(runtime_stage);
   FML_CHECK(runtime_stage->IsDirty());
 
-  auto dl_runtime_effect = DlRuntimeEffect::MakeImpeller(runtime_stage);
+  auto dl_runtime_effect = DlRuntimeEffectImpeller::Make(runtime_stage);
 
   return DlColorSource::MakeRuntimeEffect(dl_runtime_effect, samplers,
                                           uniform_data);
@@ -99,11 +100,39 @@ TEST_P(AiksTest, CanRenderRuntimeEffectFilter) {
   DlPaint paint;
   paint.setColor(DlColor::kAqua());
   paint.setImageFilter(DlImageFilter::MakeRuntimeEffect(
-      DlRuntimeEffect::MakeImpeller(runtime_stage), sampler_inputs,
+      DlRuntimeEffectImpeller::Make(runtime_stage), sampler_inputs,
       uniform_data));
 
   DisplayListBuilder builder;
   builder.DrawRect(DlRect::MakeXYWH(0, 0, 400, 400), paint);
+
+  ASSERT_TRUE(OpenPlaygroundHere(builder.Build()));
+}
+
+TEST_P(AiksTest, RuntimeEffectWithInvalidSamplerDoesNotCrash) {
+  ScopedValidationDisable disable_validation;
+
+  // Create a sampler that is not usable as an input to the runtime effect.
+  std::vector<flutter::DlColor> colors = {flutter::DlColor::kBlue(),
+                                          flutter::DlColor::kRed()};
+  const float stops[2] = {0.0, 1.0};
+  auto linear = flutter::DlColorSource::MakeLinear({0.0, 0.0}, {300.0, 300.0},
+                                                   2, colors.data(), stops,
+                                                   flutter::DlTileMode::kClamp);
+  std::vector<std::shared_ptr<DlColorSource>> sampler_inputs = {
+      linear,
+  };
+
+  auto uniform_data = std::make_shared<std::vector<uint8_t>>();
+  uniform_data->resize(sizeof(Vector2));
+
+  DlPaint paint;
+  paint.setColorSource(
+      MakeRuntimeEffect(this, "runtime_stage_filter_example.frag.iplr",
+                        uniform_data, sampler_inputs));
+
+  DisplayListBuilder builder;
+  builder.DrawPaint(paint);
 
   ASSERT_TRUE(OpenPlaygroundHere(builder.Build()));
 }

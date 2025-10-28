@@ -12,14 +12,9 @@ import 'package:ui/src/engine.dart';
 import 'package:ui/src/engine/skwasm/skwasm_impl.dart';
 import 'package:ui/ui.dart' as ui;
 
-@JS()
-@staticInterop
-@anonymous
-class RasterResult {}
-
-extension RasterResultExtension on RasterResult {
-  external JSNumber get rasterStartMilliseconds;
-  external JSNumber get rasterEndMilliseconds;
+extension type RasterResult._(JSObject _) implements JSObject {
+  external double get rasterStartMilliseconds;
+  external double get rasterEndMilliseconds;
   external JSArray<JSAny> get imageBitmaps;
 }
 
@@ -73,6 +68,12 @@ class SkwasmCallbackHandler {
   }
 }
 
+typedef RenderResult = ({
+  List<DomImageBitmap> imageBitmaps,
+  int rasterStartMicros,
+  int rasterEndMicros,
+});
+
 class SkwasmSurface {
   factory SkwasmSurface() {
     final SurfaceHandle surfaceHandle = withStackScope((StackScope scope) {
@@ -92,20 +93,27 @@ class SkwasmSurface {
     surfaceSetCallbackHandler(handle, SkwasmCallbackHandler.instance.callbackPointer);
   }
 
-  Future<RenderResult> renderPictures(List<SkwasmPicture> pictures) =>
+  Future<RenderResult> renderPictures(List<SkwasmPicture> pictures, int width, int height) =>
       withStackScope((StackScope scope) async {
-        final Pointer<PictureHandle> pictureHandles =
-            scope.allocPointerArray(pictures.length).cast<PictureHandle>();
+        final Pointer<PictureHandle> pictureHandles = scope
+            .allocPointerArray(pictures.length)
+            .cast<PictureHandle>();
         for (int i = 0; i < pictures.length; i++) {
           pictureHandles[i] = pictures[i].handle;
         }
-        final int callbackId = surfaceRenderPictures(handle, pictureHandles, pictures.length);
+        final int callbackId = surfaceRenderPictures(
+          handle,
+          pictureHandles,
+          width,
+          height,
+          pictures.length,
+        );
         final RasterResult rasterResult =
             (await SkwasmCallbackHandler.instance.registerCallback(callbackId)) as RasterResult;
         final RenderResult result = (
           imageBitmaps: rasterResult.imageBitmaps.toDart.cast<DomImageBitmap>(),
-          rasterStartMicros: (rasterResult.rasterStartMilliseconds.toDartDouble * 1000).toInt(),
-          rasterEndMicros: (rasterResult.rasterEndMilliseconds.toDartDouble * 1000).toInt(),
+          rasterStartMicros: (rasterResult.rasterStartMilliseconds * 1000).toInt(),
+          rasterEndMicros: (rasterResult.rasterEndMilliseconds * 1000).toInt(),
         );
         return result;
       });
@@ -123,6 +131,10 @@ class SkwasmSurface {
     }
     skDataDispose(dataHandle);
     return ByteData.sublistView(output);
+  }
+
+  void setSkiaResourceCacheMaxBytes(int bytes) {
+    surfaceSetResourceCacheLimitBytes(handle, bytes);
   }
 
   void dispose() {

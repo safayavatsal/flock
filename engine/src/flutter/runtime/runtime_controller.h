@@ -121,8 +121,9 @@ class RuntimeController : public PlatformConfigurationClient,
       const fml::closure& isolate_shutdown_callback,
       const std::shared_ptr<const fml::Mapping>& persistent_isolate_data,
       fml::WeakPtr<IOManager> io_manager,
-      fml::WeakPtr<ImageDecoder> image_decoder,
-      fml::WeakPtr<ImageGeneratorRegistry> image_generator_registry,
+      fml::TaskRunnerAffineWeakPtr<ImageDecoder> image_decoder,
+      fml::TaskRunnerAffineWeakPtr<ImageGeneratorRegistry>
+          image_generator_registry,
       fml::TaskRunnerAffineWeakPtr<SnapshotDelegate> snapshot_delegate) const;
 
   // |PlatformConfigurationClient|
@@ -444,17 +445,6 @@ class RuntimeController : public PlatformConfigurationClient,
   virtual bool NotifyIdle(fml::TimeDelta deadline);
 
   //----------------------------------------------------------------------------
-  /// @brief      Notify the Dart VM that the attached flutter view has been
-  ///             destroyed. This gives the Dart VM to perform some cleanup
-  ///             activities e.g: perform garbage collection to free up any
-  ///             unused memory.
-  ///
-  /// NotifyDestroyed is advisory. The VM may or may not perform any clean up
-  /// activities.
-  ///
-  virtual bool NotifyDestroyed();
-
-  //----------------------------------------------------------------------------
   /// @brief      Returns if the root isolate is running. The isolate must be
   ///             transitioned to the running phase manually. The isolate can
   ///             stop running if it terminates execution on its own.
@@ -490,7 +480,8 @@ class RuntimeController : public PlatformConfigurationClient,
   /// @brief      Dispatch the semantics action to the specified accessibility
   ///             node.
   ///
-  /// @param[in]  node_id The identified of the accessibility node.
+  /// @param[in]  view_id The identifier of the view.
+  /// @param[in]  node_id The identifier of the accessibility node.
   /// @param[in]  action  The semantics action to perform on the specified
   ///                     accessibility node.
   /// @param[in]  args    Optional data that applies to the specified action.
@@ -498,7 +489,8 @@ class RuntimeController : public PlatformConfigurationClient,
   /// @return     If the semantics action was dispatched. This may fail if an
   ///             isolate is not running.
   ///
-  bool DispatchSemanticsAction(int32_t node_id,
+  bool DispatchSemanticsAction(int64_t view_id,
+                               int32_t node_id,
                                SemanticsAction action,
                                fml::MallocMapping args);
 
@@ -641,6 +633,15 @@ class RuntimeController : public PlatformConfigurationClient,
   // |PlatformConfigurationClient|
   std::shared_ptr<const fml::Mapping> GetPersistentIsolateData() override;
 
+  // |PlatformConfigurationClient|
+  void UpdateSemantics(int64_t view_id, SemanticsUpdate* update) override;
+
+  // |PlatformConfigurationClient|
+  void SetApplicationLocale(std::string locale) override;
+
+  // |PlatformConfigurationClient|
+  void SetSemanticsTreeEnabled(bool enabled) override;
+
   const fml::WeakPtr<IOManager>& GetIOManager() const {
     return context_.io_manager;
   }
@@ -675,6 +676,8 @@ class RuntimeController : public PlatformConfigurationClient,
   std::shared_ptr<PlatformIsolateManager> GetPlatformIsolateManager() override {
     return platform_isolate_manager_;
   }
+
+  void SetRootIsolateOwnerToCurrentThread();
 
   //--------------------------------------------------------------------------
   /// @brief      Shuts down all registered platform isolates. Must be called
@@ -765,9 +768,6 @@ class RuntimeController : public PlatformConfigurationClient,
               Scene* scene,
               double width,
               double height) override;
-
-  // |PlatformConfigurationClient|
-  void UpdateSemantics(SemanticsUpdate* update) override;
 
   // |PlatformConfigurationClient|
   void HandlePlatformMessage(std::unique_ptr<PlatformMessage> message) override;

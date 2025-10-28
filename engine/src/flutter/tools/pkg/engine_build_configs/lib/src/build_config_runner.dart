@@ -486,7 +486,8 @@ final class BuildRunner extends Runner {
       bootstrapPath,
       '--re_proxy=$reproxyPath',
       '--use_application_default_credentials',
-      if (shutdown) '--shutdown' else ...<String>['--cfg=$reclientConfigPath'],
+      '--cfg=$reclientConfigPath',
+      if (shutdown) '--shutdown',
     ];
     if (!processRunner.processManager.canRun(bootstrapPath)) {
       eventHandler(
@@ -502,6 +503,10 @@ final class BuildRunner extends Runner {
         rbeConfig.environment,
       ),
     );
+    String? okMessage;
+    if (shutdown) {
+      okMessage = await _reproxystatus();
+    }
     final ProcessRunnerResult bootstrapResult;
     if (dryRun) {
       bootstrapResult = _dryRunResult;
@@ -518,10 +523,7 @@ final class BuildRunner extends Runner {
         pid: result.pid, // pid,
       );
     }
-    String okMessage = bootstrapResult.stdout.trim();
-    if (shutdown) {
-      okMessage = await _reproxystatus() ?? okMessage;
-    }
+    okMessage ??= bootstrapResult.stdout.trim();
     eventHandler(
       RunnerResult(
         '${build.name}: RBE ${shutdown ? 'shutdown' : 'startup'}',
@@ -575,6 +577,9 @@ final class BuildRunner extends Runner {
   }
 
   Future<bool> _runNinja(RunnerEventHandler eventHandler) async {
+    if (build.ninja.config.isEmpty) {
+      return true;
+    }
     if (_isRbe) {
       if (!await _bootstrapRbe(eventHandler)) {
         return false;
@@ -807,7 +812,7 @@ final class BuildTestRunner extends Runner {
 
   @override
   Future<bool> run(RunnerEventHandler eventHandler) async {
-    final String interpreter = _interpreter(test.language);
+    final String interpreter = test.language != null ? _interpreter(test.language!) : "";
     final List<String> command = <String>[
       if (interpreter.isNotEmpty) interpreter,
       test.script,

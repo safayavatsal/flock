@@ -6,7 +6,6 @@ import 'dart:js_interop';
 
 import 'package:test/bootstrap/browser.dart';
 import 'package:test/test.dart';
-
 import 'package:ui/src/engine.dart';
 
 import 'common.dart';
@@ -22,8 +21,8 @@ void testMain() {
 
   setUp(() {
     TestSkDeletableMock.deleteCount = 0;
-    nativeMemoryFinalizationRegistry =
-        mockFinalizationRegistry = _MockNativeMemoryFinalizationRegistry();
+    nativeMemoryFinalizationRegistry = mockFinalizationRegistry =
+        _MockNativeMemoryFinalizationRegistry();
   });
 
   tearDown(() {
@@ -252,21 +251,16 @@ class TestSkDeletableMock {
   JsConstructor get constructor => TestJsConstructor(name: 'TestSkDeletable');
 }
 
-@JS()
-@anonymous
-@staticInterop
-class TestSkDeletable implements SkDeletable {
+extension type TestSkDeletable._primary(JSObject _) implements SkDeletable {
   factory TestSkDeletable() {
     final TestSkDeletableMock mock = TestSkDeletableMock();
     return TestSkDeletable._(
-      isDeleted:
-          () {
-            return mock.isDeleted();
-          }.toJS,
-      delete:
-          () {
-            return mock.delete();
-          }.toJS,
+      isDeleted: () {
+        return mock.isDeleted();
+      }.toJS,
+      delete: () {
+        return mock.delete();
+      }.toJS,
       constructor: mock.constructor,
     );
   }
@@ -278,10 +272,7 @@ class TestSkDeletable implements SkDeletable {
   });
 }
 
-@JS()
-@anonymous
-@staticInterop
-class TestJsConstructor implements JsConstructor {
+extension type TestJsConstructor._(JSObject _) implements JsConstructor {
   external factory TestJsConstructor({String name});
 }
 
@@ -323,7 +314,7 @@ class _MockNativeMemoryFinalizationRegistry implements NativeMemoryFinalizationR
   final List<_MockPair> registeredPairs = <_MockPair>[];
 
   @override
-  void register(Object owner, UniqueRef<Object> ref) {
+  void register(Object owner, UniqueRef<JSObject> ref) {
     registeredPairs.add(_MockPair(owner, ref));
   }
 }
@@ -332,5 +323,5 @@ class _MockPair {
   _MockPair(this.owner, this.ref);
 
   Object owner;
-  UniqueRef<Object> ref;
+  UniqueRef<JSObject> ref;
 }
