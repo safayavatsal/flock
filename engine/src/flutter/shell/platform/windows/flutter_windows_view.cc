@@ -176,14 +176,6 @@ bool FlutterWindowsView::OnFrameGenerated(size_t width, size_t height) {
   return true;
 }
 
-void FlutterWindowsView::UpdateFlutterCursor(const std::string& cursor_name) {
-  binding_handler_->UpdateFlutterCursor(cursor_name);
-}
-
-void FlutterWindowsView::SetFlutterCursor(HCURSOR cursor) {
-  binding_handler_->SetFlutterCursor(cursor);
-}
-
 void FlutterWindowsView::ForceRedraw() {
   if (resize_status_ == ResizeState::kDone) {
     // Request new frame.
@@ -315,6 +307,11 @@ void FlutterWindowsView::OnKey(int key,
   SendKey(key, scancode, action, character, extended, was_down, callback);
 }
 
+void FlutterWindowsView::OnFocus(FlutterViewFocusState focus_state,
+                                 FlutterViewFocusDirection direction) {
+  SendFocus(focus_state, direction);
+}
+
 void FlutterWindowsView::OnComposeBegin() {
   SendComposeBegin();
 }
@@ -368,7 +365,7 @@ void FlutterWindowsView::OnResetImeComposing() {
   binding_handler_->OnResetImeComposing();
 }
 
-// Sends new size  information to FlutterEngine.
+// Sends new size information to FlutterEngine.
 void FlutterWindowsView::SendWindowMetrics(size_t width,
                                            size_t height,
                                            double pixel_ratio) const {
@@ -384,12 +381,14 @@ void FlutterWindowsView::SendWindowMetrics(size_t width,
 FlutterWindowMetricsEvent FlutterWindowsView::CreateWindowMetricsEvent() const {
   PhysicalWindowBounds bounds = binding_handler_->GetPhysicalWindowBounds();
   double pixel_ratio = binding_handler_->GetDpiScale();
+  FlutterEngineDisplayId display_id = binding_handler_->GetDisplayId();
 
   FlutterWindowMetricsEvent event = {};
   event.struct_size = sizeof(event);
   event.width = bounds.width;
   event.height = bounds.height;
   event.pixel_ratio = pixel_ratio;
+  event.display_id = display_id;
   event.view_id = view_id_;
 
   return event;
@@ -555,6 +554,16 @@ void FlutterWindowsView::SendKey(int key,
           callback(handled);
         }
       });
+}
+
+void FlutterWindowsView::SendFocus(FlutterViewFocusState focus_state,
+                                   FlutterViewFocusDirection direction) {
+  FlutterViewFocusEvent event = {};
+  event.struct_size = sizeof(event);
+  event.view_id = view_id_;
+  event.state = focus_state;
+  event.direction = direction;
+  engine_->SendViewFocusEvent(event);
 }
 
 void FlutterWindowsView::SendComposeBegin() {
@@ -824,6 +833,10 @@ void FlutterWindowsView::OnDwmCompositionChanged() {
 
 void FlutterWindowsView::OnWindowStateEvent(HWND hwnd, WindowStateEvent event) {
   engine_->OnWindowStateEvent(hwnd, event);
+}
+
+bool FlutterWindowsView::Focus() {
+  return binding_handler_->Focus();
 }
 
 bool FlutterWindowsView::NeedsVsync() const {

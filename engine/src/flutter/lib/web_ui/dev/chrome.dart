@@ -19,19 +19,20 @@ import 'common.dart';
 import 'environment.dart';
 import 'package_lock.dart';
 
-const String kBlankPageUrl = 'about:blank';
-
 /// Provides an environment for desktop Chrome.
 class ChromeEnvironment implements BrowserEnvironment {
-  ChromeEnvironment({required bool useDwarf}) : _useDwarf = useDwarf;
+  ChromeEnvironment({required bool useDwarf, required List<String> flags})
+    : _useDwarf = useDwarf,
+      _flags = flags;
 
   late final BrowserInstallation _installation;
 
   final bool _useDwarf;
+  final List<String> _flags;
 
   @override
   Future<Browser> launchBrowserInstance(Uri url, {bool debug = false}) async {
-    return Chrome(url, _installation, debug: debug, useDwarf: _useDwarf);
+    return Chrome(url, _installation, debug: debug, useDwarf: _useDwarf, flags: _flags);
   }
 
   @override
@@ -68,6 +69,7 @@ class Chrome extends Browser {
     BrowserInstallation installation, {
     required bool debug,
     required bool useDwarf,
+    required List<String> flags,
   }) {
     final Completer<Uri> remoteDebuggerCompleter = Completer<Uri>.sync();
     final Completer<String> exceptionCompleter = Completer<String>();
@@ -87,7 +89,7 @@ class Chrome extends Browser {
         final String dir = await generateUserDirectory(installation, useDwarf);
         final List<String> args = <String>[
           '--user-data-dir=$dir',
-          kBlankPageUrl,
+          url.toString(),
           if (!debug) '--headless',
           if (isChromeNoSandbox) '--no-sandbox',
           // When headless, this is the actual size of the viewport.
@@ -116,6 +118,8 @@ class Chrome extends Browser {
           // for WebGL contexts. In order to work around this limitation, we can force
           // GPU rendering with this flag.
           if (environment.isMacosArm) '--use-angle=metal',
+
+          ...flags,
         ];
 
         final Process process = await _spawnChromiumProcess(installation.executable, args);
@@ -141,10 +145,9 @@ class Chrome extends Browser {
     BrowserInstallation installation,
     bool useDwarf,
   ) async {
-    final String userDirectoryPath =
-        environment.webUiDartToolDir
-            .createTempSync('test_chrome_user_data_')
-            .resolveSymbolicLinksSync();
+    final String userDirectoryPath = environment.webUiDartToolDir
+        .createTempSync('test_chrome_user_data_')
+        .resolveSymbolicLinksSync();
     if (!useDwarf) {
       return userDirectoryPath;
     }
@@ -384,7 +387,7 @@ Future<Uri> getRemoteDebuggerUrl(Uri base) async {
 Future<void> setupChromiumTab(Uri url, Completer<String> exceptionCompleter) async {
   final wip.ChromeConnection chromeConnection = wip.ChromeConnection('localhost', kDevtoolsPort);
   final wip.ChromeTab? chromeTab = await chromeConnection.getTab(
-    (wip.ChromeTab chromeTab) => chromeTab.url == kBlankPageUrl,
+    (wip.ChromeTab chromeTab) => chromeTab.url == url.toString(),
   );
   final wip.WipConnection wipConnection = await chromeTab!.connect();
 
@@ -397,8 +400,4 @@ Future<void> setupChromiumTab(Uri url, Completer<String> exceptionCompleter) asy
       exceptionCompleter.complete('$text: $description');
     }
   });
-
-  await wipConnection.page.enable();
-
-  await wipConnection.page.navigate(url.toString());
 }
