@@ -10,6 +10,7 @@ library;
 
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,7 +18,7 @@ import '../widgets/feedback_tester.dart';
 import '../widgets/semantics_tester.dart';
 
 void main() {
-  final ThemeData material3Theme = ThemeData(useMaterial3: true);
+  final ThemeData material3Theme = ThemeData();
   final ThemeData material2Theme = ThemeData(useMaterial3: false);
 
   testWidgets('Floating Action Button control test', (WidgetTester tester) async {
@@ -504,13 +505,14 @@ void main() {
     Navigator.push(
       theContext,
       PageRouteBuilder<void>(
-        pageBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) {
-          return const Placeholder();
-        },
+        pageBuilder:
+            (
+              BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+            ) {
+              return const Placeholder();
+            },
       ),
     );
     await tester
@@ -535,13 +537,14 @@ void main() {
     Navigator.push(
       theContext,
       PageRouteBuilder<void>(
-        pageBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) {
-          return const Placeholder();
-        },
+        pageBuilder:
+            (
+              BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+            ) {
+              return const Placeholder();
+            },
       ),
     );
     await tester.pump();
@@ -566,13 +569,14 @@ void main() {
     Navigator.push(
       theContext,
       PageRouteBuilder<void>(
-        pageBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Animation<double> secondaryAnimation,
-        ) {
-          return const Placeholder();
-        },
+        pageBuilder:
+            (
+              BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+            ) {
+              return const Placeholder();
+            },
       ),
     );
     await tester.pump();
@@ -866,7 +870,7 @@ void main() {
 
     expect(
       RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1),
-      SystemMouseCursors.click,
+      kIsWeb ? SystemMouseCursors.click : SystemMouseCursors.basic,
     );
 
     // Test default cursor when disabled
@@ -1463,6 +1467,19 @@ void main() {
         expect(feedback.hapticCount, 0);
       },
     );
+  });
+
+  testWidgets('FloatingActionButton does not crash at zero area', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          floatingActionButton: Center(
+            child: SizedBox.shrink(child: FloatingActionButton(onPressed: () {})),
+          ),
+        ),
+      ),
+    );
+    expect(tester.getSize(find.byType(FloatingActionButton)), Size.zero);
   });
 }
 

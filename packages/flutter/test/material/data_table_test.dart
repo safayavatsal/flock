@@ -6,8 +6,8 @@
 library;
 
 import 'dart:math' as math;
-import 'dart:ui' show SemanticsRole;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -39,40 +39,44 @@ void main() {
             },
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                onSelectChanged: (bool? selected) {
-                  log.add('row-selected: ${dessert.name}');
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {
+              log.add('row-selected: ${dessert.name}');
+            },
+            onLongPress: () {
+              log.add('onLongPress: ${dessert.name}');
+            },
+            onHover: (bool hovering) {
+              if (hovering) {
+                log.add('onHover: ${dessert.name}');
+              }
+            },
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(
+                Text('${dessert.calories}'),
+                showEditIcon: true,
+                onTap: () {
+                  log.add('cell-tap: ${dessert.calories}');
+                },
+                onDoubleTap: () {
+                  log.add('cell-doubleTap: ${dessert.calories}');
                 },
                 onLongPress: () {
-                  log.add('onLongPress: ${dessert.name}');
+                  log.add('cell-longPress: ${dessert.calories}');
                 },
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(
-                    Text('${dessert.calories}'),
-                    showEditIcon: true,
-                    onTap: () {
-                      log.add('cell-tap: ${dessert.calories}');
-                    },
-                    onDoubleTap: () {
-                      log.add('cell-doubleTap: ${dessert.calories}');
-                    },
-                    onLongPress: () {
-                      log.add('cell-longPress: ${dessert.calories}');
-                    },
-                    onTapCancel: () {
-                      log.add('cell-tapCancel: ${dessert.calories}');
-                    },
-                    onTapDown: (TapDownDetails details) {
-                      log.add('cell-tapDown: ${dessert.calories}');
-                    },
-                  ),
-                ],
-              );
-            }).toList(),
+                onTapCancel: () {
+                  log.add('cell-tapCancel: ${dessert.calories}');
+                },
+                onTapDown: (TapDownDetails details) {
+                  log.add('cell-tapDown: ${dessert.calories}');
+                },
+              ),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -91,6 +95,15 @@ void main() {
     await tester.longPress(find.text('Cupcake'));
 
     expect(log, <String>['onLongPress: Cupcake']);
+    log.clear();
+
+    TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: Offset.zero);
+    addTearDown(gesture.removePointer);
+    await tester.pump();
+    await gesture.moveTo(tester.getCenter(find.text('Cupcake')));
+
+    expect(log, <String>['onHover: Cupcake']);
     log.clear();
 
     await tester.tap(find.text('Calories'));
@@ -125,7 +138,7 @@ void main() {
     expect(log, <String>['cell-tapDown: 375', 'cell-tapCancel: 375', 'cell-longPress: 375']);
     log.clear();
 
-    TestGesture gesture = await tester.startGesture(tester.getRect(find.text('375')).center);
+    gesture = await tester.startGesture(tester.getRect(find.text('375')).center);
     await tester.pump(const Duration(milliseconds: 100));
     // onTapDown callback is registered.
     expect(log, equals(<String>['cell-tapDown: 375']));
@@ -165,12 +178,11 @@ void main() {
           (int index) => DataRow(
             cells: <DataCell>[DataCell(Text('Row $index'))],
             selected: selected[index],
-            onSelectChanged:
-                index == disabledIndex
-                    ? null
-                    : (bool? value) {
-                      log.add('row-selected: $index');
-                    },
+            onSelectChanged: index == disabledIndex
+                ? null
+                : (bool? value) {
+                    log.add('row-selected: $index');
+                  },
           ),
         ),
       );
@@ -227,25 +239,24 @@ void main() {
           DataColumn(label: Text('Name'), tooltip: 'Name'),
           DataColumn(label: Text('Calories'), tooltip: 'Calories', numeric: true),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                onSelectChanged: (bool? selected) {
-                  log.add('row-selected: ${dessert.name}');
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {
+              log.add('row-selected: ${dessert.name}');
+            },
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(
+                Text('${dessert.calories}'),
+                showEditIcon: true,
+                onTap: () {
+                  log.add('cell-tap: ${dessert.calories}');
                 },
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(
-                    Text('${dessert.calories}'),
-                    showEditIcon: true,
-                    onTap: () {
-                      log.add('cell-tap: ${dessert.calories}');
-                    },
-                  ),
-                ],
-              );
-            }).toList(),
+              ),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -397,10 +408,9 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(cells: <DataCell>[DataCell(Text(dessert.name))]);
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(cells: <DataCell>[DataCell(Text(dessert.name))]);
+        }).toList(),
       );
     }
 
@@ -436,10 +446,9 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(cells: <DataCell>[DataCell(Text(dessert.name))]);
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(cells: <DataCell>[DataCell(Text(dessert.name))]);
+        }).toList(),
       );
     }
 
@@ -454,7 +463,11 @@ void main() {
     expect(transformOfArrow.transform.getRotation(), equals(Matrix3.identity()));
 
     // Cause a rebuild by updating the widget
-    await tester.pumpWidget(MaterialApp(home: Material(child: buildTable(title: 'Name2'))));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(child: buildTable(title: 'Name2')),
+      ),
+    );
     await tester.pumpAndSettle();
     // The `tester.widget` ensures that there is exactly one upward arrow.
     transformOfArrow = tester.widget<Transform>(iconFinder);
@@ -479,10 +492,9 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(cells: <DataCell>[DataCell(Text(dessert.name))]);
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(cells: <DataCell>[DataCell(Text(dessert.name))]);
+        }).toList(),
       );
     }
 
@@ -497,7 +509,11 @@ void main() {
     expect(transformOfArrow.transform.getRotation(), equals(Matrix3.rotationZ(math.pi)));
 
     // Cause a rebuild by updating the widget
-    await tester.pumpWidget(MaterialApp(home: Material(child: buildTable(title: 'Name2'))));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Material(child: buildTable(title: 'Name2')),
+      ),
+    );
     await tester.pumpAndSettle();
     // The `tester.widget` ensures that there is exactly one upward arrow.
     transformOfArrow = tester.widget<Transform>(iconFinder);
@@ -555,17 +571,16 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                onSelectChanged: (bool? selected) {},
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                ],
-              );
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {},
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -584,17 +599,16 @@ void main() {
                 onSort: (int columnIndex, bool ascending) {},
               ),
             ],
-            rows:
-                kDesserts.map<DataRow>((Dessert dessert) {
-                  return DataRow(
-                    key: ValueKey<String>(dessert.name),
-                    onSelectChanged: (bool? selected) {},
-                    cells: <DataCell>[
-                      DataCell(Text(dessert.name)),
-                      DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                    ],
-                  );
-                }).toList(),
+            rows: kDesserts.map<DataRow>((Dessert dessert) {
+              return DataRow(
+                key: ValueKey<String>(dessert.name),
+                onSelectChanged: (bool? selected) {},
+                cells: <DataCell>[
+                  DataCell(Text(dessert.name)),
+                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+                ],
+              );
+            }).toList(),
           ),
         ),
       ),
@@ -692,17 +706,16 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                onSelectChanged: (bool? selected) {},
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                ],
-              );
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {},
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -747,18 +760,17 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                onSelectChanged: (bool? selected) {},
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                  DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
-                ],
-              );
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {},
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+              DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -840,18 +852,17 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                onSelectChanged: (bool? selected) {},
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                  DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
-                ],
-              );
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {},
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+              DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -943,17 +954,16 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                  DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
-                ],
-              );
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+              DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -1025,17 +1035,16 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                  DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
-                ],
-              );
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+              DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -1101,7 +1110,11 @@ void main() {
     // no thickness provided - border should be default: i.e "1.0" as it
     // set in DataTable constructor
     await tester.pumpWidget(
-      MaterialApp(home: Material(child: DataTable(columns: columns, rows: rows))),
+      MaterialApp(
+        home: Material(
+          child: DataTable(columns: columns, rows: rows),
+        ),
+      ),
     );
 
     Table table = tester.widget(find.byType(Table));
@@ -1112,7 +1125,9 @@ void main() {
     const double thickness = 4.2;
     await tester.pumpWidget(
       MaterialApp(
-        home: Material(child: DataTable(dividerThickness: thickness, columns: columns, rows: rows)),
+        home: Material(
+          child: DataTable(dividerThickness: thickness, columns: columns, rows: rows),
+        ),
       ),
     );
     table = tester.widget(find.byType(Table));
@@ -1133,7 +1148,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Material(child: DataTable(showBottomBorder: true, columns: columns, rows: rows)),
+        home: Material(
+          child: DataTable(showBottomBorder: true, columns: columns, rows: rows),
+        ),
       ),
     );
 
@@ -1143,7 +1160,11 @@ void main() {
     expect(boxDecoration.border!.bottom.width, 1.0);
 
     await tester.pumpWidget(
-      MaterialApp(home: Material(child: DataTable(columns: columns, rows: rows))),
+      MaterialApp(
+        home: Material(
+          child: DataTable(columns: columns, rows: rows),
+        ),
+      ),
     );
     table = tester.widget(find.byType(Table));
     tableRow = table.children.last;
@@ -1176,8 +1197,9 @@ void main() {
     {
       final Finder nameText = find.text('Name');
       expect(nameText, findsOneWidget);
-      final Finder nameCell =
-          find.ancestor(of: find.text('Name'), matching: find.byType(Container)).first;
+      final Finder nameCell = find
+          .ancestor(of: find.text('Name'), matching: find.byType(Container))
+          .first;
       expect(tester.getCenter(nameText), equals(tester.getCenter(nameCell)));
       expect(find.descendant(of: nameCell, matching: find.byType(Icon)), findsNothing);
     }
@@ -1188,8 +1210,9 @@ void main() {
     {
       final Finder nameText = find.text('Name');
       expect(nameText, findsOneWidget);
-      final Finder nameCell =
-          find.ancestor(of: find.text('Name'), matching: find.byType(Container)).first;
+      final Finder nameCell = find
+          .ancestor(of: find.text('Name'), matching: find.byType(Container))
+          .first;
       expect(find.descendant(of: nameCell, matching: find.byType(Icon)), findsOneWidget);
     }
 
@@ -1199,8 +1222,9 @@ void main() {
     {
       final Finder nameText = find.text('Name');
       expect(nameText, findsOneWidget);
-      final Finder nameCell =
-          find.ancestor(of: find.text('Name'), matching: find.byType(Container)).first;
+      final Finder nameCell = find
+          .ancestor(of: find.text('Name'), matching: find.byType(Container))
+          .first;
       expect(tester.getCenter(nameText), equals(tester.getCenter(nameCell)));
       expect(find.descendant(of: nameCell, matching: find.byType(Icon)), findsNothing);
     }
@@ -1248,7 +1272,7 @@ void main() {
   });
 
   testWidgets('DataRow renders default selected row colors', (WidgetTester tester) async {
-    final ThemeData themeData = ThemeData.light();
+    final ThemeData themeData = ThemeData();
     Widget buildTable({bool selected = false}) {
       return MaterialApp(
         theme: themeData,
@@ -1332,8 +1356,8 @@ void main() {
           rows: <DataRow>[
             DataRow(
               selected: selected,
-              color: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-                if (states.contains(MaterialState.selected)) {
+              color: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                if (states.contains(WidgetState.selected)) {
                   return selectedColor;
                 }
                 return defaultColor;
@@ -1372,8 +1396,8 @@ void main() {
               onSelectChanged: (bool? value) {},
             ),
             DataRow(
-              color: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-                if (states.contains(MaterialState.disabled)) {
+              color: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                if (states.contains(WidgetState.disabled)) {
                   return disabledColor;
                 }
                 return defaultColor;
@@ -1408,8 +1432,8 @@ void main() {
         columns: const <DataColumn>[DataColumn(label: Text('Column1'))],
         rows: <DataRow>[
           DataRow(
-            color: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) {
+            color: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
                 return pressedColor;
               }
               return Colors.transparent;
@@ -1422,7 +1446,10 @@ void main() {
     }
 
     await tester.pumpWidget(
-      MaterialApp(theme: ThemeData(useMaterial3: false), home: Material(child: buildTable())),
+      MaterialApp(
+        theme: ThemeData(useMaterial3: false),
+        home: Material(child: buildTable()),
+      ),
     );
 
     final TestGesture gesture = await tester.startGesture(tester.getCenter(find.text('Content1')));
@@ -1441,8 +1468,8 @@ void main() {
         columns: const <DataColumn>[DataColumn(label: Text('Column1'))],
         rows: <DataRow>[
           DataRow(
-            color: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-              if (states.contains(MaterialState.pressed)) {
+            color: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+              if (states.contains(WidgetState.pressed)) {
                 return pressedColor;
               }
               return Colors.transparent;
@@ -1454,7 +1481,12 @@ void main() {
       );
     }
 
-    await tester.pumpWidget(MaterialApp(theme: ThemeData(), home: Material(child: buildTable())));
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(),
+        home: Material(child: buildTable()),
+      ),
+    );
 
     final TestGesture gesture = await tester.startGesture(tester.getCenter(find.text('Content1')));
     await tester.pump(const Duration(milliseconds: 200)); // splash is well underway
@@ -1578,18 +1610,17 @@ void main() {
             onSort: (int columnIndex, bool ascending) {},
           ),
         ],
-        rows:
-            kDesserts.map<DataRow>((Dessert dessert) {
-              return DataRow(
-                key: ValueKey<String>(dessert.name),
-                onSelectChanged: (bool? selected) {},
-                cells: <DataCell>[
-                  DataCell(Text(dessert.name)),
-                  DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
-                  DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
-                ],
-              );
-            }).toList(),
+        rows: kDesserts.map<DataRow>((Dessert dessert) {
+          return DataRow(
+            key: ValueKey<String>(dessert.name),
+            onSelectChanged: (bool? selected) {},
+            cells: <DataCell>[
+              DataCell(Text(dessert.name)),
+              DataCell(Text('${dessert.calories}'), showEditIcon: true, onTap: () {}),
+              DataCell(Text('${dessert.fat}'), showEditIcon: true, onTap: () {}),
+            ],
+          );
+        }).toList(),
       );
     }
 
@@ -1695,7 +1726,11 @@ void main() {
     expect(tableBorder.bottom.width, 1);
 
     await tester.pumpWidget(
-      MaterialApp(home: Material(child: DataTable(columns: columns, rows: rows))),
+      MaterialApp(
+        home: Material(
+          child: DataTable(columns: columns, rows: rows),
+        ),
+      ),
     );
 
     table = tester.widget(find.byType(Table));
@@ -1749,8 +1784,8 @@ void main() {
           rows: <DataRow>[
             DataRow(
               selected: selected,
-              color: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-                if (states.contains(MaterialState.selected)) {
+              color: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+                if (states.contains(WidgetState.selected)) {
                   return selectedColor;
                 }
                 return defaultColor;
@@ -1885,9 +1920,25 @@ void main() {
       expect(secondaryTapped, isTrue);
       expect(secondaryTappedDown, isTrue);
     });
+
+    testWidgets('TableRowInkWell renders at zero area', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Material(
+            child: SizedBox.shrink(
+              child: Table(
+                children: const <TableRow>[
+                  TableRow(children: <Widget>[TableRowInkWell(child: Text('X'))]),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    });
   });
 
-  testWidgets('Heading cell cursor resolves MaterialStateMouseCursor correctly', (
+  testWidgets('Heading cell cursor resolves WidgetStateMouseCursor correctly', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -1898,8 +1949,8 @@ void main() {
             columns: <DataColumn>[
               // This column can be sorted.
               DataColumn(
-                mouseCursor: MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-                  if (states.contains(MaterialState.disabled)) {
+                mouseCursor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+                  if (states.contains(WidgetState.disabled)) {
                     return SystemMouseCursors.forbidden;
                   }
                   return SystemMouseCursors.copy;
@@ -1910,8 +1961,8 @@ void main() {
               ),
               // This column cannot be sorted.
               DataColumn(
-                mouseCursor: MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-                  if (states.contains(MaterialState.disabled)) {
+                mouseCursor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+                  if (states.contains(WidgetState.disabled)) {
                     return SystemMouseCursors.forbidden;
                   }
                   return SystemMouseCursors.copy;
@@ -1949,7 +2000,7 @@ void main() {
     );
   });
 
-  testWidgets('DataRow cursor resolves MaterialStateMouseCursor correctly', (
+  testWidgets('DataRow cursor resolves WidgetStateMouseCursor correctly', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
@@ -1964,8 +2015,8 @@ void main() {
             rows: <DataRow>[
               // This row can be selected.
               DataRow(
-                mouseCursor: MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-                  if (states.contains(MaterialState.selected)) {
+                mouseCursor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+                  if (states.contains(WidgetState.selected)) {
                     return SystemMouseCursors.copy;
                   }
                   return SystemMouseCursors.forbidden;
@@ -1977,8 +2028,8 @@ void main() {
               DataRow(
                 selected: true,
                 onSelectChanged: (bool? selected) {},
-                mouseCursor: MaterialStateProperty.resolveWith((Set<MaterialState> states) {
-                  if (states.contains(MaterialState.selected)) {
+                mouseCursor: WidgetStateProperty.resolveWith((Set<WidgetState> states) {
+                  if (states.contains(WidgetState.selected)) {
                     return SystemMouseCursors.copy;
                   }
                   return SystemMouseCursors.forbidden;
@@ -2044,7 +2095,7 @@ void main() {
     // Test that the checkbox cursor is not changed.
     expect(
       RendererBinding.instance.mouseTracker.debugDeviceActiveCursor(1),
-      SystemMouseCursors.click,
+      kIsWeb ? SystemMouseCursors.click : SystemMouseCursors.basic,
     );
 
     await gesture.moveTo(tester.getCenter(find.text('Data')));
@@ -2248,24 +2299,34 @@ void main() {
                       role: SemanticsRole.table,
                       children: <TestSemantics>[
                         TestSemantics(
-                          label: 'Column 1',
-                          textDirection: TextDirection.ltr,
-                          role: SemanticsRole.columnHeader,
+                          role: SemanticsRole.row,
+                          children: <TestSemantics>[
+                            TestSemantics(
+                              label: 'Column 1',
+                              textDirection: TextDirection.ltr,
+                              role: SemanticsRole.columnHeader,
+                            ),
+                            TestSemantics(
+                              label: 'Column 2',
+                              textDirection: TextDirection.ltr,
+                              role: SemanticsRole.columnHeader,
+                            ),
+                          ],
                         ),
                         TestSemantics(
-                          label: 'Column 2',
-                          textDirection: TextDirection.ltr,
-                          role: SemanticsRole.columnHeader,
-                        ),
-                        TestSemantics(
-                          label: 'Data Cell 1',
-                          textDirection: TextDirection.ltr,
-                          role: SemanticsRole.cell,
-                        ),
-                        TestSemantics(
-                          label: 'Data Cell 2',
-                          textDirection: TextDirection.ltr,
-                          role: SemanticsRole.cell,
+                          role: SemanticsRole.row,
+                          children: <TestSemantics>[
+                            TestSemantics(
+                              label: 'Data Cell 1',
+                              textDirection: TextDirection.ltr,
+                              role: SemanticsRole.cell,
+                            ),
+                            TestSemantics(
+                              label: 'Data Cell 2',
+                              textDirection: TextDirection.ltr,
+                              role: SemanticsRole.cell,
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -2284,6 +2345,60 @@ void main() {
     );
 
     semantics.dispose();
+  });
+
+  // Regression test for https://github.com/flutter/flutter/issues/171264
+  testWidgets('DataTable cell has correct semantics rect ', (WidgetTester tester) async {
+    final SemanticsTester semantics = SemanticsTester(tester);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: DataTable(
+            dataRowMaxHeight: double.infinity,
+            dataRowMinHeight: 70,
+            columns: const <DataColumn>[
+              // Set width so the Column width is not determined by text.
+              DataColumn(label: SizedBox(width: 250, child: Text('Column 1'))),
+              DataColumn(label: SizedBox(width: 250, child: Text('Column 2'))),
+            ],
+            rows: const <DataRow>[
+              DataRow(
+                cells: <DataCell>[DataCell(Text('Data Cell 1')), DataCell(Text('Data Cell 2'))],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final SemanticsFinder cell1 = find.semantics.byLabel('Data Cell 1');
+
+    expect(cell1, findsOne);
+
+    final SemanticsNode cell1Node = cell1.evaluate().first;
+
+    // The semantics node of cell 1 should not have a transform
+    expect(cell1Node.transform, null);
+    expect(cell1Node.rect, const Rect.fromLTRB(0.0, 0.0, 302.0, 70.0));
+
+    semantics.dispose();
+  });
+
+  testWidgets('DataTable, DataColumn, DataRow, and DataCell render at zero area', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SizedBox.shrink(
+          child: DataTable(
+            columns: const <DataColumn>[DataColumn(label: Text('X'))],
+            rows: const <DataRow>[
+              DataRow(cells: <DataCell>[DataCell(Text('X'))]),
+            ],
+          ),
+        ),
+      ),
+    );
   });
 }
 
